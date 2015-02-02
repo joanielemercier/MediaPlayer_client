@@ -5,6 +5,7 @@ void ofApp::setup(){
 	ofSetFrameRate(30);
 	receiver.setup(6666);
 	in_error = false;
+    show_stats = true;
 	ofBackground(76, 153, 0);
 	font.loadFont(OF_TTF_MONO, 72);
 
