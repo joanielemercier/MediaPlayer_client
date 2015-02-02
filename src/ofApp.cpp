@@ -51,7 +51,7 @@ void ofApp::update(){
 				frame_numbers.pop_front();
 			}
 
-			bool in_error = false;
+			in_error = false;
 
 			int previous = 0;
 			for (std::list<int>::const_iterator it = frame_numbers.begin(); it != frame_numbers.end(); ++it) {
@@ -110,13 +110,14 @@ void ofApp::draw(){
 		player.draw(0, 0);
 	}
 
-	if (in_error)
-	{
-		ofDrawBitmapString("Frame discontinuity", 100, 100);
-	}
-
 	if (show_stats)
 	{
+
+		if (in_error)
+		{
+			ofDrawBitmapString("Frame discontinuity", 100, 100);
+		}
+
 		std::string message = ofToString(current_frame_number);
 
 		font.drawString(message, (ofGetWindowWidth() / 2) - (font.stringWidth(message) / 2), (ofGetWindowHeight() / 2) - (font.stringHeight(message) / 2));
