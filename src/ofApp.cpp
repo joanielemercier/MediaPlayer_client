@@ -79,7 +79,14 @@ void ofApp::update(){
 
 			previous_error_state = in_error;
 		}
-
+		else if (message.getAddress() == "/display_stats")
+		{
+			show_stats = message.getArgAsInt32(0);
+		}
+		else
+		{
+			ofLog() << "Unexpected message address: " << message.getAddress();
+		}
 	}
 
 	if (was_updated)
@@ -108,9 +115,12 @@ void ofApp::draw(){
 		ofDrawBitmapString("Frame discontinuity", 100, 100);
 	}
 
-	std::string message = ofToString(current_frame_number);
+	if (show_stats)
+	{
+		std::string message = ofToString(current_frame_number);
 
-	font.drawString(message, (ofGetWindowWidth() / 2) - (font.stringWidth(message) / 2), (ofGetWindowHeight() / 2) - (font.stringHeight(message) / 2));
+		font.drawString(message, (ofGetWindowWidth() / 2) - (font.stringWidth(message) / 2), (ofGetWindowHeight() / 2) - (font.stringHeight(message) / 2));
+	}
 }
 
 //--------------------------------------------------------------

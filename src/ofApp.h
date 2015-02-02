@@ -25,6 +25,7 @@ class ofApp : public ofBaseApp{
 		std::list<int> frame_numbers;
 		bool in_error;
 		int current_frame_number;
+		bool show_stats;
 
 		ofTrueTypeFont font;
 
