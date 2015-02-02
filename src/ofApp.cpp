@@ -31,8 +31,8 @@ void ofApp::update(){
 			bool in_error = false;
 
 			int previous = 0;
-			for (std::list<int>::const_iterator it = frame_numbers.cbegin(); it != frame_numbers.cend(); ++it) {
-				if (it != frame_numbers.cbegin())
+			for (std::list<int>::const_iterator it = frame_numbers.begin(); it != frame_numbers.end(); ++it) {
+				if (it != frame_numbers.begin())
 				{
 					if (previous != *it - 1)
 					{
