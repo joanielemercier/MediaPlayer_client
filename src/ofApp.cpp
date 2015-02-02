@@ -92,6 +92,8 @@ void ofApp::update(){
 			player.setFrame(actual_frame);
 		}
 	}
+
+    player.update();
 }
 
 //--------------------------------------------------------------
