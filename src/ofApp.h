@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include <ofxOsc.h>
+#include <ofxHapPlayer.h>
 
 class ofApp : public ofBaseApp{
 
@@ -26,5 +27,9 @@ class ofApp : public ofBaseApp{
 		int current_frame_number;
 
 		ofTrueTypeFont font;
+
+		ofParameterGroup parameters;
+		ofParameter<std::string> movie_file;
 		
+		ofxHapPlayer player;
 };

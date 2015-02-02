@@ -7,16 +7,39 @@ void ofApp::setup(){
 	in_error = false;
 	ofBackground(76, 153, 0);
 	font.loadFont(OF_TTF_MONO, 72);
+
+	parameters.setName("settings");
+	parameters.add(movie_file.set("movie_file", "Movie.mov"));
+
+	ofXml xml("settings.xml");
+
+	xml.deserialize(parameters);
+
+	std::string movie_path = parameters.getString("movie_file");
+
+	player.loadMovie(movie_path);
+	player.setLoopState(OF_LOOP_NORMAL);
+	player.play();
+
+	/*
+	ofXml xml;
+	xml.serialize(parameters);
+	xml.save("settings.xml");
+	*/
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	bool was_updated = false;
+
 	while (receiver.hasWaitingMessages())
 	{
 		ofxOscMessage message;
 		receiver.getNextMessage(&message);
 		if (message.getAddress() == "/frame_number")
 		{
+			was_updated = true;
+
 			bool previous_error_state = in_error;
 
 			current_frame_number = message.getArgAsInt64(0);
@@ -58,10 +81,26 @@ void ofApp::update(){
 		}
 
 	}
+
+	if (was_updated)
+	{
+		// For now, if frame number is out of range, loop around
+		int total_frames = player.getTotalNumFrames();
+		if (total_frames > 0)
+		{
+			long actual_frame = current_frame_number % total_frames;
+			player.setFrame(actual_frame);
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+	if (player.isLoaded())
+	{
+		player.draw(0, 0);
+	}
+
 	if (in_error)
 	{
 		ofDrawBitmapString("Frame discontinuity", 100, 100);
