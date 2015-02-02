@@ -39,11 +39,15 @@ void ofApp::update(){
 		receiver.getNextMessage(&message);
 		if (message.getAddress() == "/frame_number")
 		{
-			was_updated = true;
-
 			bool previous_error_state = in_error;
 
-			current_frame_number = message.getArgAsInt64(0);
+			long incoming_frame_number = message.getArgAsInt64(0);
+
+			if (incoming_frame_number > current_frame_number)
+			{
+				current_frame_number = incoming_frame_number;
+				was_updated = true;
+			}
 
 			frame_numbers.push_back(current_frame_number);
 
@@ -60,6 +64,10 @@ void ofApp::update(){
 				{
 					if (previous != *it - 1)
 					{
+						if (show_stats)
+						{
+							ofLog() << "expected frame " << previous + 1 << " got " << *it;
+						}
 						in_error = true;
 					}
 				}
