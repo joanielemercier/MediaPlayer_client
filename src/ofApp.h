@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include <ofxOsc.h>
 
 class ofApp : public ofBaseApp{
 
@@ -18,5 +19,12 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+
+		ofxOscReceiver receiver;
+		std::list<int> frame_numbers;
+		bool in_error;
+		int current_frame_number;
+
+		ofTrueTypeFont font;
 		
 };
