@@ -4,8 +4,9 @@
 void ofApp::setup(){
 	ofSetFrameRate(30);
 	receiver.setup(6666);
-	in_error = false;
+	in_error = true;
     show_stats = true;
+	current_frame_number = 0;
 	ofBackground(76, 153, 0);
 	font.loadFont(OF_TTF_MONO, 72);
 
@@ -20,6 +21,7 @@ void ofApp::setup(){
 
 	player.loadMovie(movie_path);
 	player.setLoopState(OF_LOOP_NORMAL);
+	player.setSpeed(0.0);
 	player.play();
 
 	/*
@@ -37,7 +39,14 @@ void ofApp::update(){
 	{
 		ofxOscMessage message;
 		receiver.getNextMessage(&message);
-		if (message.getAddress() == "/frame_number")
+		if (message.getAddress() == "/frame_number_reset")
+		{
+			frame_numbers.clear();
+			current_frame_number = message.getArgAsInt64(0);
+			in_error = false;
+			was_updated = true;
+		}
+		else if (message.getAddress() == "/frame_number")
 		{
 			bool previous_error_state = in_error;
 
@@ -49,7 +58,7 @@ void ofApp::update(){
 				was_updated = true;
 			}
 
-			frame_numbers.push_back(current_frame_number);
+			frame_numbers.push_back(incoming_frame_number);
 
 			while (frame_numbers.size() > 100)
 			{
@@ -121,10 +130,13 @@ void ofApp::draw(){
 
 	if (show_stats)
 	{
+		std::string rate_message = "frame-rate: " + ofToString(ofGetFrameRate());
+
+		ofDrawBitmapString(rate_message, 20, 30);
 
 		if (in_error)
 		{
-			ofDrawBitmapString("Frame discontinuity", 100, 100);
+			ofDrawBitmapString("Frame discontinuity", 20, 60);
 		}
 
 		std::string message = ofToString(current_frame_number);
