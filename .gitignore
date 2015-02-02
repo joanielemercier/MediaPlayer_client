@@ -47,3 +47,4 @@ Temporary Items
 
 obj/
 /bin/*
+!/bin/data
