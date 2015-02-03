@@ -11,7 +11,8 @@ void ofApp::setup(){
 	font.loadFont(OF_TTF_MONO, 72);
 
 	parameters.setName("settings");
-	parameters.add(movie_file.set("movie_file", "Movie.mov"));
+    ofParameter<std::string> movie_file("movie_file", "Movie.mov");
+	parameters.add(movie_file);
 
 	ofXml xml("settings.xml");
 

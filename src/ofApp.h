@@ -30,7 +30,6 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont font;
 
 		ofParameterGroup parameters;
-		ofParameter<std::string> movie_file;
 		
 		ofxHapPlayer player;
 
