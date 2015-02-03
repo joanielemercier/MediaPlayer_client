@@ -61,7 +61,7 @@ void ofApp::update(){
 
 			frame_numbers.push_back(incoming_frame_number);
 
-			while (frame_numbers.size() > 60)
+            while (frame_numbers.size() > 300)
 			{
 				frame_numbers.pop_front();
 			}
