@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetFrameRate(30);
+	ofSetFrameRate(60);
 	receiver.setup(6666);
 	in_error = true;
     show_stats = true;
