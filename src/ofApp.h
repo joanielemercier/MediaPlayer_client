@@ -33,4 +33,6 @@ class ofApp : public ofBaseApp{
 		ofParameter<std::string> movie_file;
 		
 		ofxHapPlayer player;
+
+        std::string frame_number_errors;
 };

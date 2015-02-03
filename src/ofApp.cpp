@@ -33,7 +33,8 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	bool was_updated = false;
+	bool frame_was_updated = false;
+    bool missed_frames_need_checked = false;
 
 	while (receiver.hasWaitingMessages())
 	{
@@ -44,58 +45,26 @@ void ofApp::update(){
 			frame_numbers.clear();
 			current_frame_number = message.getArgAsInt64(0);
 			in_error = false;
-			was_updated = true;
+			frame_was_updated = true;
+            missed_frames_need_checked = true;
 		}
 		else if (message.getAddress() == "/frame_number")
 		{
-			bool previous_error_state = in_error;
-
 			long incoming_frame_number = message.getArgAsInt64(0);
 
 			if (incoming_frame_number > current_frame_number)
 			{
 				current_frame_number = incoming_frame_number;
-				was_updated = true;
+				frame_was_updated = true;
 			}
 
 			frame_numbers.push_back(incoming_frame_number);
 
-			while (frame_numbers.size() > 100)
+			while (frame_numbers.size() > 60)
 			{
 				frame_numbers.pop_front();
 			}
-
-			in_error = false;
-
-			int previous = 0;
-			for (std::list<int>::const_iterator it = frame_numbers.begin(); it != frame_numbers.end(); ++it) {
-				if (it != frame_numbers.begin())
-				{
-					if (previous != *it - 1)
-					{
-						if (show_stats)
-						{
-							ofLog() << "expected frame " << previous + 1 << " got " << *it;
-						}
-						in_error = true;
-					}
-				}
-				previous = *it;
-			}
-
-			if (in_error != previous_error_state)
-			{
-				if (in_error)
-				{
-					ofBackground(204, 0, 0);
-				}
-				else
-				{
-					ofBackground(76, 153, 0);
-				}
-			}
-
-			previous_error_state = in_error;
+            missed_frames_need_checked = true;
 		}
 		else if (message.getAddress() == "/display_stats")
 		{
@@ -107,7 +76,43 @@ void ofApp::update(){
 		}
 	}
 
-	if (was_updated)
+    if (missed_frames_need_checked)
+    {
+        bool previous_error_state = in_error;
+        in_error = false;
+        frame_number_errors.clear();
+
+        int previous = 0;
+        for (std::list<int>::const_iterator it = frame_numbers.begin(); it != frame_numbers.end(); ++it) {
+            if (it != frame_numbers.begin())
+            {
+                if (previous != *it - 1)
+                {
+                    if (!frame_number_errors.empty())
+                    {
+                        frame_number_errors += ",";
+                    }
+                    frame_number_errors += ofToString(previous) + "->" + ofToString(*it);
+                    in_error = true;
+                }
+            }
+            previous = *it;
+        }
+
+        if (in_error != previous_error_state)
+        {
+            if (in_error)
+            {
+                ofBackground(204, 0, 0);
+            }
+            else
+            {
+                ofBackground(76, 153, 0);
+            }
+        }
+    }
+
+	if (frame_was_updated)
 	{
 		// For now, if frame number is out of range, loop around
 		int total_frames = player.getTotalNumFrames();
@@ -130,14 +135,25 @@ void ofApp::draw(){
 
 	if (show_stats)
 	{
-		std::string rate_message = "frame-rate: " + ofToString(ofGetFrameRate());
+        std::vector<std::string> messages;
+        messages.push_back(ofToString(ofGetFrameRate(), 0) + " FPS");
 
-		ofDrawBitmapString(rate_message, 20, 30);
-
+        if (!player.isLoaded())
+        {
+            std::string movie_path = parameters.getString("movie_file");
+            messages.push_back("Movie not loaded: " + movie_path);
+        }
 		if (in_error)
 		{
-			ofDrawBitmapString("Frame discontinuity", 20, 60);
+            messages.push_back("Frame discontinuities: " + frame_number_errors);
 		}
+
+        float y_offset = 20;
+        for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); ++it)
+        {
+            ofDrawBitmapString(*it, 10, y_offset);
+            y_offset += 20;
+        }
 
 		std::string message = ofToString(current_frame_number);
 
