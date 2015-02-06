@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include <ofxOsc.h>
 #include <ofxHapPlayer.h>
+#include <ofxHapImageSequence.h>
 
 class ofApp : public ofBaseApp{
 
@@ -32,6 +33,9 @@ class ofApp : public ofBaseApp{
 		ofParameterGroup parameters;
 		
 		ofxHapPlayer player;
+        ofxHapImageSequence sequence;
+        ofxHapImage image;
 
+        bool use_sequence;
         std::string frame_number_errors;
 };

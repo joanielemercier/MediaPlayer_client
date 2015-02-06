@@ -11,19 +11,28 @@ void ofApp::setup(){
 	font.loadFont(OF_TTF_MONO, 72);
 
 	parameters.setName("settings");
-    ofParameter<std::string> movie_file("movie_file", "Movie.mov");
-	parameters.add(movie_file);
+    ofParameter<std::string> source("source", "Movie.mov");
+	parameters.add(source);
 
 	ofXml xml("settings.xml");
 
 	xml.deserialize(parameters);
 
-	std::string movie_path = parameters.getString("movie_file");
+	std::string source_path = parameters.getString("source");
 
-	player.loadMovie(movie_path);
-	player.setLoopState(OF_LOOP_NORMAL);
-	player.setSpeed(0.0);
-	player.play();
+    if (ofFile(source_path).isDirectory())
+    {
+        sequence.load(source_path);
+        use_sequence = true;
+    }
+    else
+    {
+        player.loadMovie(source_path);
+        player.setLoopState(OF_LOOP_NORMAL);
+        player.setSpeed(0.0);
+        player.play();
+        use_sequence = false;
+    }
 
 	/*
 	ofXml xml;
@@ -116,11 +125,18 @@ void ofApp::update(){
 	if (frame_was_updated)
 	{
 		// For now, if frame number is out of range, loop around
-		int total_frames = player.getTotalNumFrames();
+        int total_frames = use_sequence ? sequence.size() : player.getTotalNumFrames();
 		if (total_frames > 0)
 		{
 			long actual_frame = current_frame_number % total_frames;
-			player.setFrame(actual_frame);
+            if (use_sequence)
+            {
+                image = sequence.getImage(actual_frame);
+            }
+            else
+            {
+                player.setFrame(actual_frame);
+            }
 		}
 	}
 
@@ -129,7 +145,11 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	if (player.isLoaded())
+    if (use_sequence)
+    {
+        image.draw(0, 0);
+    }
+	else if (player.isLoaded())
 	{
 		player.draw(0, 0);
 	}
@@ -139,10 +159,10 @@ void ofApp::draw(){
         std::vector<std::string> messages;
         messages.push_back(ofToString(ofGetFrameRate(), 0) + " FPS");
 
-        if (!player.isLoaded())
+        if (use_sequence == false && !player.isLoaded())
         {
-            std::string movie_path = parameters.getString("movie_file");
-            messages.push_back("Movie not loaded: " + movie_path);
+            std::string source_path = parameters.getString("source");
+            messages.push_back("Frame source not loaded: " + source_path);
         }
 		if (in_error)
 		{

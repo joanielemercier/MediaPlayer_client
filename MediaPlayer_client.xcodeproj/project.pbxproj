@@ -9,6 +9,344 @@
 		<string>46</string>
 		<key>objects</key>
 		<dict>
+			<key>00E4F3637848107D613732C8</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHapImageSequence.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImageSequence/src/ofxHapImageSequence.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>91A17AFA93DBF6D41092663E</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>D7AD1F4C08376D7F27AFECEB</string>
+					<string>00E4F3637848107D613732C8</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>src</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>457DA38F7C5F654F1222BDD4</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>91A17AFA93DBF6D41092663E</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>ofxHapImageSequence</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>E4504DA1C6F3D443AE3AB221</key>
+			<dict>
+				<key>fileRef</key>
+				<string>D7AD1F4C08376D7F27AFECEB</string>
+				<key>isa</key>
+				<string>PBXBuildFile</string>
+			</dict>
+			<key>D7AD1F4C08376D7F27AFECEB</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.cpp.cpp</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHapImageSequence.cpp</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImageSequence/src/ofxHapImageSequence.cpp</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>F883AABEF87F9A8828CBD6F3</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>BBD994B44529E5C2991EACD7</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>include</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>67EAEF5328D8677F9737BEE5</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>F883AABEF87F9A8828CBD6F3</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>squish</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>BBD994B44529E5C2991EACD7</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>squish.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/squish/include/squish.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>ED12DC8F55B17296E15C4935</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>snappy.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/snappy/include/snappy.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>B2EA941788F7799EFABA4C07</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>snappy-stubs-public.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/snappy/include/snappy-stubs-public.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>89862FC35AF15B4A61184CC2</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>snappy-sinksource.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/snappy/include/snappy-sinksource.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>3B3B176B798D8D22FDA778CA</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>0E657DC760DFC6DF70B0613D</string>
+					<string>89862FC35AF15B4A61184CC2</string>
+					<string>B2EA941788F7799EFABA4C07</string>
+					<string>ED12DC8F55B17296E15C4935</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>include</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>3A3EA444CD4586DEC4479D9D</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>3B3B176B798D8D22FDA778CA</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>snappy</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>0E657DC760DFC6DF70B0613D</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>snappy-c.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/snappy/include/snappy-c.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>42FE5CAADBC3A886A061FB53</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>hap.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/Hap/src/hap.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>E9B244A5B99F94CEECE615A5</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>46FC8DE8D6D117A0237B9F88</string>
+					<string>42FE5CAADBC3A886A061FB53</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>src</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>7F2E2B61EF5393829CAF3BB1</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>E9B244A5B99F94CEECE615A5</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>Hap</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>B8A7F8181B3B80572A900906</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>7F2E2B61EF5393829CAF3BB1</string>
+					<string>3A3EA444CD4586DEC4479D9D</string>
+					<string>67EAEF5328D8677F9737BEE5</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>libs</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>D8E27E29F11EDB955EA1C308</key>
+			<dict>
+				<key>fileRef</key>
+				<string>46FC8DE8D6D117A0237B9F88</string>
+				<key>isa</key>
+				<string>PBXBuildFile</string>
+			</dict>
+			<key>46FC8DE8D6D117A0237B9F88</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.c</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>hap.c</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/libs/Hap/src/hap.c</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>90F2AB381CA70FA4B403F3BD</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHapImage.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/src/ofxHapImage.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>4DE8AE4B80BB24A507CB5393</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>79737DE4E86087FEEBDBFF09</string>
+					<string>90F2AB381CA70FA4B403F3BD</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>src</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>AEA67E3025549F3FF5F9E329</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>4DE8AE4B80BB24A507CB5393</string>
+					<string>B8A7F8181B3B80572A900906</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>ofxHapImage</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>3148B5F6EC92C6A602E01809</key>
+			<dict>
+				<key>fileRef</key>
+				<string>79737DE4E86087FEEBDBFF09</string>
+				<key>isa</key>
+				<string>PBXBuildFile</string>
+			</dict>
+			<key>79737DE4E86087FEEBDBFF09</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.cpp.cpp</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHapImage.cpp</string>
+				<key>path</key>
+				<string>../../../addons/ofxHapImage/src/ofxHapImage.cpp</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
 			<key>4B1A217C1373D539F9E2880E</key>
 			<dict>
 				<key>explicitFileType</key>
@@ -915,6 +1253,8 @@
 				<array>
 					<string>E6053AB7FEC63D5F83825B88</string>
 					<string>123746A97018087522D6BDFF</string>
+					<string>AEA67E3025549F3FF5F9E329</string>
+					<string>457DA38F7C5F654F1222BDD4</string>
 				</array>
 				<key>isa</key>
 				<string>PBXGroup</string>
@@ -1298,6 +1638,12 @@
 				<string>E4EB6923138AFD0F00A09F29</string>
 				<key>buildSettings</key>
 				<dict>
+					<key>OTHER_LDFLAGS</key>
+					<array>
+						<string>$(OF_CORE_LIBS)</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib/osx/libsnappy.a</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib/osx/libsquish.a</string>
+					</array>
 					<key>HEADER_SEARCH_PATHS</key>
 					<array>
 						<string>$(OF_CORE_HEADERS)</string>
@@ -1313,7 +1659,21 @@
 						<string>../../../addons/ofxHapPlayer/libs/HapSupport</string>
 						<string>../../../addons/ofxHapPlayer/libs/HapSupport/src</string>
 						<string>../../../addons/ofxHapPlayer/src</string>
+						<string>../../../addons/ofxHapImage/libs</string>
+						<string>../../../addons/ofxHapImage/libs/Hap</string>
+						<string>../../../addons/ofxHapImage/libs/Hap/src</string>
+						<string>../../../addons/ofxHapImage/libs/snappy</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/include</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib/osx</string>
+						<string>../../../addons/ofxHapImage/libs/squish</string>
+						<string>../../../addons/ofxHapImage/libs/squish/include</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib/osx</string>
+						<string>../../../addons/ofxHapImage/src</string>
 						<string>src</string>
+						<string>../../../addons/ofxHapImageSequence/libs</string>
+						<string>../../../addons/ofxHapImageSequence/src</string>
 					</array>
 					<key>ARCHS</key>
 					<string>$(NATIVE_ARCH)</string>
@@ -1369,6 +1729,12 @@
 				<string>E4EB6923138AFD0F00A09F29</string>
 				<key>buildSettings</key>
 				<dict>
+					<key>OTHER_LDFLAGS</key>
+					<array>
+						<string>$(OF_CORE_LIBS)</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib/osx/libsnappy.a</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib/osx/libsquish.a</string>
+					</array>
 					<key>HEADER_SEARCH_PATHS</key>
 					<array>
 						<string>$(OF_CORE_HEADERS)</string>
@@ -1384,7 +1750,21 @@
 						<string>../../../addons/ofxHapPlayer/libs/HapSupport</string>
 						<string>../../../addons/ofxHapPlayer/libs/HapSupport/src</string>
 						<string>../../../addons/ofxHapPlayer/src</string>
+						<string>../../../addons/ofxHapImage/libs</string>
+						<string>../../../addons/ofxHapImage/libs/Hap</string>
+						<string>../../../addons/ofxHapImage/libs/Hap/src</string>
+						<string>../../../addons/ofxHapImage/libs/snappy</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/include</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib</string>
+						<string>../../../addons/ofxHapImage/libs/snappy/lib/osx</string>
+						<string>../../../addons/ofxHapImage/libs/squish</string>
+						<string>../../../addons/ofxHapImage/libs/squish/include</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib</string>
+						<string>../../../addons/ofxHapImage/libs/squish/lib/osx</string>
+						<string>../../../addons/ofxHapImage/src</string>
 						<string>src</string>
+						<string>../../../addons/ofxHapImageSequence/libs</string>
+						<string>../../../addons/ofxHapImageSequence/src</string>
 					</array>
 					<key>ARCHS</key>
 					<string>$(NATIVE_ARCH)</string>
@@ -1460,6 +1840,9 @@
 					<string>879A251454401BC0B6E4F238</string>
 					<string>9DECE28DE972DD39553DD35C</string>
 					<string>D58D428A766F04E0F7BE51A5</string>
+					<string>3148B5F6EC92C6A602E01809</string>
+					<string>D8E27E29F11EDB955EA1C308</string>
+					<string>E4504DA1C6F3D443AE3AB221</string>
 				</array>
 				<key>isa</key>
 				<string>PBXSourcesBuildPhase</string>
