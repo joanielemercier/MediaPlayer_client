@@ -1,4 +1,4 @@
 ofxOsc
-ofxHapPlayer
 ofxHapImage
 ofxHapImageSequence
+ofxHapPlayer
