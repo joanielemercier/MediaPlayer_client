@@ -10,13 +10,26 @@ void ofApp::setup(){
 	ofBackground(76, 153, 0);
 	font.loadFont(OF_TTF_MONO, 72);
 
+    /*
+    Define default settings and then override them with any stored in settings.xml
+    */
+    std::string random_string = ofToHex(uint16_t(ofRandom(UINT16_MAX)));
+
 	parameters.setName("settings");
     ofParameter<std::string> source("source", "Movie.mov");
+    ofParameter<std::string> client_id("client_id", random_string);
 	parameters.add(source);
+    parameters.add(client_id);
 
 	ofXml xml("settings.xml");
 
 	xml.deserialize(parameters);
+
+    /*
+    Save settings so that client_id is saved if we generated it
+    */
+	xml.serialize(parameters);
+	xml.save("settings.xml");
 
 	std::string source_path = parameters.getString("source");
 
@@ -157,7 +170,8 @@ void ofApp::draw(){
 	if (show_stats)
 	{
         std::vector<std::string> messages;
-        messages.push_back(ofToString(ofGetFrameRate(), 0) + " FPS");
+        std::string client_id = parameters.getString("client_id");
+        messages.push_back("Client ID: " + client_id + " " + ofToString(ofGetFrameRate(), 0) + " FPS");
 
         if (use_sequence == false && !player.isLoaded())
         {
