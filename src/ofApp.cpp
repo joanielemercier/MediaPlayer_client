@@ -33,6 +33,9 @@ void ofApp::setup(){
 
 	std::string source_path = parameters.getString("source");
 
+    /*
+    Load our source
+    */
     if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
     {
         sequence.load(source_path);
@@ -46,12 +49,6 @@ void ofApp::setup(){
         player.play();
         use_sequence = false;
     }
-
-	/*
-	ofXml xml;
-	xml.serialize(parameters);
-	xml.save("settings.xml");
-	*/
 }
 
 //--------------------------------------------------------------
@@ -59,60 +56,25 @@ void ofApp::update(){
 	bool frame_was_updated = false;
     bool missed_frames_need_checked = false;
 
-	while (receiver.hasWaitingMessages())
-	{
-		ofxOscMessage message;
-		receiver.getNextMessage(&message);
-		if (message.getAddress() == "/frame_number_reset")
-		{
-			frame_numbers.clear();
-			current_frame_number = message.getArgAsInt64(0);
-			in_error = false;
-			frame_was_updated = true;
-            missed_frames_need_checked = true;
-		}
-		else if (message.getAddress() == "/frame_number")
-		{
-            if (message.getNumArgs() == 1)
+    while (receiver.hasWaitingMessages())
+    {
+        ofxOscMessage message;
+        receiver.getNextMessage(&message);
+
+        std::string client_prefix = "/client/";
+        if (message.getAddress().compare(0, client_prefix.length(), client_prefix) == 0)
+        {
+            client_prefix += parameters.getString("client_id");
+            if (message.getAddress().compare(0, client_prefix.length(), client_prefix) == 0)
             {
-                long incoming_frame_number;
-                if (message.getArgType(0) == OFXOSC_TYPE_INT32)
-                {
-                    incoming_frame_number = message.getArgAsInt32(0);
-                }
-                else if (message.getArgType(0) == OFXOSC_TYPE_INT64)
-                {
-                    incoming_frame_number = message.getArgAsInt64(0);
-                }
-                else
-                {
-                    continue; // mal-formed message
-                }
-
-                if (incoming_frame_number > current_frame_number)
-                {
-                    current_frame_number = incoming_frame_number;
-                    frame_was_updated = true;
-                }
-
-                frame_numbers.push_back(incoming_frame_number);
-
-                while (frame_numbers.size() > 300)
-                {
-                    frame_numbers.pop_front();
-                }
-                missed_frames_need_checked = true;
+                doOSCEvent(message.getAddress().substr(client_prefix.length(), std::string::npos), message, frame_was_updated, missed_frames_need_checked);
             }
-		}
-		else if (message.getAddress() == "/display_stats")
-		{
-			show_stats = message.getArgAsInt32(0);
-		}
-		else
-		{
-			ofLog() << "Unexpected message address: " << message.getAddress();
-		}
-	}
+        }
+        else
+        {
+            doOSCEvent(message.getAddress(), message, frame_was_updated, missed_frames_need_checked);
+        }
+    }
 
     if (missed_frames_need_checked)
     {
@@ -150,13 +112,13 @@ void ofApp::update(){
         }
     }
 
-	if (frame_was_updated)
-	{
-		// For now, if frame number is out of range, loop around
+    if (frame_was_updated)
+    {
+        // For now, if frame number is out of range, loop around
         int total_frames = use_sequence ? sequence.size() : player.getTotalNumFrames();
-		if (total_frames > 0)
-		{
-			long actual_frame = current_frame_number % total_frames;
+        if (total_frames > 0)
+        {
+            long actual_frame = current_frame_number % total_frames;
             if (use_sequence)
             {
                 image = sequence[actual_frame];
@@ -165,10 +127,63 @@ void ofApp::update(){
             {
                 player.setFrame(actual_frame);
             }
-		}
-	}
+        }
+    }
 
     player.update();
+}
+
+void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked)
+{
+    if (local_address == "/frame_number_reset")
+    {
+        frame_numbers.clear();
+        current_frame_number = message.getArgAsInt64(0);
+        in_error = false;
+        frame_was_updated = true;
+        missed_frames_need_checked = true;
+    }
+    else if (local_address == "/frame_number")
+    {
+        if (message.getNumArgs() == 1)
+        {
+            long incoming_frame_number;
+            if (message.getArgType(0) == OFXOSC_TYPE_INT32)
+            {
+                incoming_frame_number = message.getArgAsInt32(0);
+            }
+            else if (message.getArgType(0) == OFXOSC_TYPE_INT64)
+            {
+                incoming_frame_number = message.getArgAsInt64(0);
+            }
+            else
+            {
+                return; // mal-formed message
+            }
+
+            if (incoming_frame_number > current_frame_number)
+            {
+                current_frame_number = incoming_frame_number;
+                frame_was_updated = true;
+            }
+
+            frame_numbers.push_back(incoming_frame_number);
+
+            while (frame_numbers.size() > 300)
+            {
+                frame_numbers.pop_front();
+            }
+            missed_frames_need_checked = true;
+        }
+    }
+    else if (local_address == "/display_stats")
+    {
+        show_stats = message.getArgAsInt32(0);
+    }
+    else
+    {
+        ofLog() << "Unexpected message address: " << message.getAddress();
+    }
 }
 
 //--------------------------------------------------------------
@@ -177,13 +192,13 @@ void ofApp::draw(){
     {
         image.draw(0, 0);
     }
-	else if (player.isLoaded())
-	{
-		player.draw(0, 0);
-	}
+    else if (player.isLoaded())
+    {
+        player.draw(0, 0);
+    }
 
-	if (show_stats)
-	{
+    if (show_stats)
+    {
         std::vector<std::string> messages;
         std::string client_id = parameters.getString("client_id");
         messages.push_back("Client ID: " + client_id + " " + ofToString(ofGetFrameRate(), 0) + " FPS");
@@ -193,10 +208,10 @@ void ofApp::draw(){
             std::string source_path = parameters.getString("source");
             messages.push_back("Frame source not loaded: " + source_path);
         }
-		if (in_error)
-		{
+        if (in_error)
+        {
             messages.push_back("Frame discontinuities: " + frame_number_errors);
-		}
+        }
 
         float y_offset = 20;
         for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); ++it)
@@ -205,10 +220,10 @@ void ofApp::draw(){
             y_offset += 20;
         }
 
-		std::string message = ofToString(current_frame_number);
+        std::string message = ofToString(current_frame_number);
 
-		font.drawString(message, (ofGetWindowWidth() / 2) - (font.stringWidth(message) / 2), (ofGetWindowHeight() / 2) - (font.stringHeight(message) / 2));
-	}
+        font.drawString(message, (ofGetWindowWidth() / 2) - (font.stringWidth(message) / 2), (ofGetWindowHeight() / 2) - (font.stringHeight(message) / 2));
+    }
 }
 
 //--------------------------------------------------------------
