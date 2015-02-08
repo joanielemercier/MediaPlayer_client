@@ -20,7 +20,7 @@ void ofApp::setup(){
 
 	std::string source_path = parameters.getString("source");
 
-    if (ofFile(source_path).isDirectory())
+    if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
     {
         sequence.load(source_path);
         use_sequence = true;
@@ -131,7 +131,7 @@ void ofApp::update(){
 			long actual_frame = current_frame_number % total_frames;
             if (use_sequence)
             {
-                image = sequence.getImage(actual_frame);
+                image = sequence[actual_frame];
             }
             else
             {
