@@ -1,5 +1,20 @@
 #include "ofApp.h"
 
+static long getMessageInteger(const ofxOscMessage& message, int index)
+{
+    switch (message.getArgType(index))
+    {
+    case OFXOSC_TYPE_INT32:
+        return message.getArgAsInt32(index);
+    case OFXOSC_TYPE_INT64:
+        return message.getArgAsInt64(index);
+    case OFXOSC_TYPE_STRING:
+        return ofToInt(message.getArgAsString(index));
+    default:
+        return 0;
+    }
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(60);
@@ -138,47 +153,39 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     if (local_address == "/frame_number_reset")
     {
         frame_numbers.clear();
-        current_frame_number = message.getArgAsInt64(0);
+        if (message.getNumArgs() == 1)
+        {
+            current_frame_number = getMessageInteger(message, 0);
+        }
+        else
+        {
+            current_frame_number = 0;
+        }
         in_error = false;
         frame_was_updated = true;
         missed_frames_need_checked = true;
     }
-    else if (local_address == "/frame_number")
+    else if (local_address == "/frame_number" && message.getNumArgs() == 1)
     {
-        if (message.getNumArgs() == 1)
+        long incoming_frame_number = getMessageInteger(message, 0);
+
+        if (incoming_frame_number > current_frame_number)
         {
-            long incoming_frame_number;
-            if (message.getArgType(0) == OFXOSC_TYPE_INT32)
-            {
-                incoming_frame_number = message.getArgAsInt32(0);
-            }
-            else if (message.getArgType(0) == OFXOSC_TYPE_INT64)
-            {
-                incoming_frame_number = message.getArgAsInt64(0);
-            }
-            else
-            {
-                return; // mal-formed message
-            }
-
-            if (incoming_frame_number > current_frame_number)
-            {
-                current_frame_number = incoming_frame_number;
-                frame_was_updated = true;
-            }
-
-            frame_numbers.push_back(incoming_frame_number);
-
-            while (frame_numbers.size() > 300)
-            {
-                frame_numbers.pop_front();
-            }
-            missed_frames_need_checked = true;
+            current_frame_number = incoming_frame_number;
+            frame_was_updated = true;
         }
+
+        frame_numbers.push_back(incoming_frame_number);
+
+        while (frame_numbers.size() > 300)
+        {
+            frame_numbers.pop_front();
+        }
+        missed_frames_need_checked = true;
     }
-    else if (local_address == "/display_stats")
+    else if (local_address == "/display_stats" && message.getNumArgs() == 1)
     {
-        show_stats = message.getArgAsInt32(0);
+        show_stats = getMessageInteger(message, 0);
     }
     else
     {
