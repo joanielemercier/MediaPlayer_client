@@ -73,21 +73,36 @@ void ofApp::update(){
 		}
 		else if (message.getAddress() == "/frame_number")
 		{
-			long incoming_frame_number = message.getArgAsInt64(0);
+            if (message.getNumArgs() == 1)
+            {
+                long incoming_frame_number;
+                if (message.getArgType(0) == OFXOSC_TYPE_INT32)
+                {
+                    incoming_frame_number = message.getArgAsInt32(0);
+                }
+                else if (message.getArgType(0) == OFXOSC_TYPE_INT64)
+                {
+                    incoming_frame_number = message.getArgAsInt64(0);
+                }
+                else
+                {
+                    continue; // mal-formed message
+                }
 
-			if (incoming_frame_number > current_frame_number)
-			{
-				current_frame_number = incoming_frame_number;
-				frame_was_updated = true;
-			}
+                if (incoming_frame_number > current_frame_number)
+                {
+                    current_frame_number = incoming_frame_number;
+                    frame_was_updated = true;
+                }
 
-			frame_numbers.push_back(incoming_frame_number);
+                frame_numbers.push_back(incoming_frame_number);
 
-            while (frame_numbers.size() > 300)
-			{
-				frame_numbers.pop_front();
-			}
-            missed_frames_need_checked = true;
+                while (frame_numbers.size() > 300)
+                {
+                    frame_numbers.pop_front();
+                }
+                missed_frames_need_checked = true;
+            }
 		}
 		else if (message.getAddress() == "/display_stats")
 		{
