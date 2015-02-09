@@ -7,6 +7,7 @@ static long getMessageInteger(const ofxOscMessage& message, int index)
     case OFXOSC_TYPE_INT32:
         return message.getArgAsInt32(index);
     case OFXOSC_TYPE_INT64:
+    case OFXOSC_TYPE_FLOAT:
         return message.getArgAsInt64(index);
     case OFXOSC_TYPE_STRING:
         return ofToInt(message.getArgAsString(index));
@@ -19,6 +20,7 @@ static float getMessageFloat(const ofxOscMessage& message, int index)
 {
     switch (message.getArgType(index))
     {
+    case OFXOSC_TYPE_INT32:
     case OFXOSC_TYPE_FLOAT:
         return message.getArgAsFloat(index); // also handles the int32 case
     case OFXOSC_TYPE_INT64:
