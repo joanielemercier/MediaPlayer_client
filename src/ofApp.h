@@ -4,6 +4,7 @@
 #include <ofxOsc.h>
 #include <ofxHapPlayer.h>
 #include <ofxHapImageSequence.h>
+#include <ofxGLWarper.h>
 
 class ofApp : public ofBaseApp{
 
@@ -22,8 +23,10 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+private:
         void doOSCEvent(std::string local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked);
-
+        void parameterChanged(ofAbstractParameter & parameter);
+        void updatePointParameter(std::string name, int index, float value);
 		ofxOscReceiver receiver;
 		std::list<int> frame_numbers;
 		bool in_error;
@@ -33,11 +36,18 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont font;
 
 		ofParameterGroup parameters;
-		
+		bool parameters_changed;
+
 		ofxHapPlayer player;
         ofxHapImageSequence sequence;
         ofxHapImage image;
 
         bool use_sequence;
         std::string frame_number_errors;
+
+        ofxGLWarper warper;
+
+        ofPoint image_dimensions;
+        bool dimensions_changed;
+        ofRectangle bounding_box;
 };

@@ -1,4 +1,7 @@
+ofxOpenCv
 ofxOsc
+ofxXmlSettings
+ofxGLWarper
 ofxHapImage
 ofxHapImageSequence
 ofxHapPlayer

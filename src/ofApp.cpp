@@ -15,6 +15,21 @@ static long getMessageInteger(const ofxOscMessage& message, int index)
     }
 }
 
+static float getMessageFloat(const ofxOscMessage& message, int index)
+{
+    switch (message.getArgType(index))
+    {
+    case OFXOSC_TYPE_FLOAT:
+        return message.getArgAsFloat(index); // also handles the int32 case
+    case OFXOSC_TYPE_INT64:
+        return message.getArgAsInt64(index);
+    case OFXOSC_TYPE_STRING:
+        return ofToInt(message.getArgAsString(index));
+    default:
+        return 0;
+    }
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(60);
@@ -22,6 +37,8 @@ void ofApp::setup(){
 	in_error = true;
     show_stats = true;
 	current_frame_number = 0;
+    parameters_changed = false;
+    dimensions_changed = true;
 	ofBackground(76, 153, 0);
 	font.loadFont(OF_TTF_MONO, 72);
 
@@ -31,26 +48,36 @@ void ofApp::setup(){
     std::string random_string = ofToHex(uint16_t(ofRandom(UINT16_MAX)));
 
 	parameters.setName("settings");
-    ofParameter<std::string> source("source", "Movie.mov");
-    ofParameter<std::string> client_id("client_id", random_string);
-	parameters.add(source);
-    parameters.add(client_id);
+	parameters.add(ofParameter<std::string>("source", "Movie.mov"));
+    parameters.add(ofParameter<std::string>("client_id", random_string));
+    parameters.add(ofParameter<ofPoint>("crop_origin", ofPoint(0.0, 0.0)));
+    parameters.add(ofParameter<float>("crop_width", 0));
+    parameters.add(ofParameter<float>("crop_height", 0));
+    parameters.add(ofParameter<ofPoint>("warp_top_left", ofPoint(0.0, 0.0)));
+    parameters.add(ofParameter<ofPoint>("warp_top_right", ofPoint(0.0, 0.0)));
+    parameters.add(ofParameter<ofPoint>("warp_bottom_right", ofPoint(0.0, 0.0)));
+    parameters.add(ofParameter<ofPoint>("warp_bottom_left", ofPoint(0.0, 0.0)));
 
 	ofXml xml("settings.xml");
 
 	xml.deserialize(parameters);
 
     /*
-    Save settings so that client_id is saved if we generated it
+    Save settings now so that client_id is saved if we generated it
     */
-	xml.serialize(parameters);
-	xml.save("settings.xml");
+	parameters_changed = true;
 
-	std::string source_path = parameters.getString("source");
+    /*
+    Monitor any subsequent settings changes so we can save them
+    */
+    ofAddListener(parameters.parameterChangedE, this, &ofApp::parameterChanged);
 
     /*
     Load our source
     */
+
+    std::string source_path = parameters.getString("source");
+
     if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
     {
         sequence.load(source_path);
@@ -137,14 +164,52 @@ void ofApp::update(){
             if (use_sequence)
             {
                 image = sequence[actual_frame];
+                if (image.getWidth() != image_dimensions.x || image.getHeight() != image_dimensions.y)
+                {
+                    dimensions_changed = true;
+                }
             }
             else
             {
                 player.setFrame(actual_frame);
+                if (player.getWidth() != image_dimensions.x || player.getHeight() != image_dimensions.y)
+                {
+                    dimensions_changed = true;
+                }
             }
         }
     }
 
+    if (parameters_changed)
+    {
+        /*
+        Save the changed parameters
+        */
+        ofXml xml("settings.xml");
+        xml.serialize(parameters);
+        xml.save("settings.xml");
+
+        dimensions_changed = true;
+        parameters_changed = false;
+    }
+    if (dimensions_changed)
+    {
+        /*
+        Update the warper
+        */
+        image_dimensions.x = (use_sequence ? image.getWidth() : player.getWidth());
+        image_dimensions.y = (use_sequence ? image.getHeight() : player.getHeight());
+
+        bounding_box.set(0.0, 0.0, image_dimensions.x, image_dimensions.y);
+        bounding_box.scaleTo(ofGetWindowRect());
+
+        warper.setup(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
+        warper.setCorner(ofxGLWarper::TOP_LEFT, parameters.getPoint("warp_top_left").get() + warper.getCorner(ofxGLWarper::TOP_LEFT));
+        warper.setCorner(ofxGLWarper::TOP_RIGHT, parameters.getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
+        warper.setCorner(ofxGLWarper::BOTTOM_LEFT, parameters.getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
+        warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, parameters.getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
+        dimensions_changed = false;
+    }
     player.update();
 }
 
@@ -187,6 +252,54 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     {
         show_stats = getMessageInteger(message, 0);
     }
+    else if (local_address == "/crop/x" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("crop_origin", 0, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/crop/y" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("crop_origin", 1, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/crop/width" && message.getNumArgs() == 1)
+    {
+        parameters["crop_width"].cast<int>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/crop/height" && message.getNumArgs() == 1)
+    {
+        parameters["crop_height"].cast<int>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/warp/top_left/x" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_top_left", 0, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/top_left/y" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_top_left", 1, -getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/top_right/x" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_top_right", 0, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/top_right/y" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_top_right", 1, -getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/bottom_right/x" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_bottom_right", 0, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/bottom_right/y" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_bottom_right", 1, -getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/bottom_left/x" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_bottom_left", 0, getMessageFloat(message, 0));
+    }
+    else if (local_address == "/warp/bottom_left/y" && message.getNumArgs() == 1)
+    {
+        updatePointParameter("warp_bottom_left", 1, -getMessageFloat(message, 0));
+    }
     else
     {
         ofLog() << "Unexpected message address: " << message.getAddress();
@@ -195,17 +308,29 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+
+    warper.begin();
     if (use_sequence)
-    {
-        image.draw(0, 0);
+    {        
+        image.draw(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
     }
     else if (player.isLoaded())
     {
-        player.draw(0, 0);
+        player.draw(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
     }
+    warper.end();
 
     if (show_stats)
     {
+        warper.begin();
+        ofPushStyle();
+        ofSetColor(128, 128, 128, 128);
+        ofSetLineWidth(1.0);
+        ofFill();
+        ofRect(bounding_box);
+        ofPopStyle();
+        warper.end();
+
         std::vector<std::string> messages;
         std::string client_id = parameters.getString("client_id");
         messages.push_back("Client ID: " + client_id + " " + ofToString(ofGetFrameRate(), 0) + " FPS");
@@ -265,7 +390,7 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+    dimensions_changed = true;
 }
 
 //--------------------------------------------------------------
@@ -276,4 +401,16 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+void ofApp::parameterChanged(ofAbstractParameter & parameter)
+{
+    parameters_changed = true;
+}
+
+void ofApp::updatePointParameter(std::string name, int index, float value)
+{
+    ofPoint current = parameters[name].cast<ofPoint>();
+    current[index] = value;
+    parameters[name].cast<ofPoint>() = current;
 }
