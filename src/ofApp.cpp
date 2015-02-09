@@ -32,6 +32,17 @@ static float getMessageFloat(const ofxOscMessage& message, int index)
     }
 }
 
+static std::string stripWhiteSpace(const std::string& string)
+{
+    std::string::size_type first = string.find_first_not_of(" \t");
+    if (first == std::string::npos)
+    {
+        return "";
+    }
+    std::string::size_type last = string.find_last_not_of(" \t");
+    return string.substr(first, last - first + 1);
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(60);
@@ -114,18 +125,20 @@ void ofApp::update(){
         ofxOscMessage message;
         receiver.getNextMessage(&message);
 
+        std::string address = stripWhiteSpace(message.getAddress());
+
         std::string client_prefix = "/client/";
-        if (message.getAddress().compare(0, client_prefix.length(), client_prefix) == 0)
+        if (address.compare(0, client_prefix.length(), client_prefix) == 0)
         {
             client_prefix += parameters.getString("client_id");
-            if (message.getAddress().compare(0, client_prefix.length(), client_prefix) == 0)
+            if (address.compare(0, client_prefix.length(), client_prefix) == 0)
             {
-                doOSCEvent(message.getAddress().substr(client_prefix.length(), std::string::npos), message, frame_was_updated, missed_frames_need_checked);
+                doOSCEvent(address.substr(client_prefix.length(), std::string::npos), message, frame_was_updated, missed_frames_need_checked);
             }
         }
         else
         {
-            doOSCEvent(message.getAddress(), message, frame_was_updated, missed_frames_need_checked);
+            doOSCEvent(address, message, frame_was_updated, missed_frames_need_checked);
         }
     }
 
