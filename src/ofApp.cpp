@@ -48,15 +48,24 @@ void ofApp::setup(){
     std::string random_string = ofToHex(uint16_t(ofRandom(UINT16_MAX)));
 
 	parameters.setName("settings");
-	parameters.add(ofParameter<std::string>("source", "Movie.mov"));
-    parameters.add(ofParameter<std::string>("client_id", random_string));
-    parameters.add(ofParameter<ofPoint>("crop_origin", ofPoint(0.0, 0.0)));
-    parameters.add(ofParameter<float>("crop_width", 0));
-    parameters.add(ofParameter<float>("crop_height", 0));
-    parameters.add(ofParameter<ofPoint>("warp_top_left", ofPoint(0.0, 0.0)));
-    parameters.add(ofParameter<ofPoint>("warp_top_right", ofPoint(0.0, 0.0)));
-    parameters.add(ofParameter<ofPoint>("warp_bottom_right", ofPoint(0.0, 0.0)));
-    parameters.add(ofParameter<ofPoint>("warp_bottom_left", ofPoint(0.0, 0.0)));
+    ofParameter<std::string> source_param("source", "Movie.mov");
+    parameters.add(source_param);
+    ofParameter<std::string> client_id_param("client_id", random_string);
+    parameters.add(client_id_param);
+    ofParameter<ofPoint> crop_origin_param("crop_origin", ofPoint(0.0, 0.0));
+    parameters.add(crop_origin_param);
+    ofParameter<float> crop_width_param("crop_width", 0);
+    parameters.add(crop_width_param);
+    ofParameter<float> crop_height_param("crop_height", 0);
+    parameters.add(crop_height_param);
+    ofParameter<ofPoint> warp_top_left_param("warp_top_left", ofPoint(0.0, 0.0));
+    parameters.add(warp_top_left_param);
+    ofParameter<ofPoint> warp_top_right_param("warp_top_right", ofPoint(0.0, 0.0));
+    parameters.add(warp_top_right_param);
+    ofParameter<ofPoint> warp_bottom_right_param("warp_bottom_right", ofPoint(0.0, 0.0));
+    parameters.add(warp_bottom_right_param);
+    ofParameter<ofPoint> warp_bottom_left_param("warp_bottom_left", ofPoint(0.0, 0.0));
+    parameters.add(warp_bottom_left_param);
 
 	ofXml xml("settings.xml");
 
