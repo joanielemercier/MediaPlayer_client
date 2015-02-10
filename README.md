@@ -19,7 +19,9 @@ Coordinates have their origin bottom-left.
 | address              | arguments                                           |
 |----------------------|-----------------------------------------------------|
 | /frame_number        | Frame number                                        |
+| /frame_number_reset  | A discontinuous frame number (optional, default 0)  |
 | /display_stats       | 0 display off, any other value on                   |
+| /crop/active         | 0 crop inactive, any other value active             |
 | /crop/x              | Horizontal crop origin in frame pixels              |
 | /crop/y              | Vertical crop origin in frame pixels                |
 | /crop/width          | Crop width in frame pixels                          |
