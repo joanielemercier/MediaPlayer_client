@@ -52,7 +52,7 @@ void ofApp::setup(){
 	current_frame_number = 0;
     parameters_changed = false;
     dimensions_changed = true;
-	ofBackground(76, 153, 0);
+	ofBackground(0);
 	font.loadFont(OF_TTF_MONO, 72);
 
     /*
@@ -165,18 +165,6 @@ void ofApp::update(){
                 }
             }
             previous = *it;
-        }
-
-        if (in_error != previous_error_state)
-        {
-            if (in_error)
-            {
-                ofBackground(204, 0, 0);
-            }
-            else
-            {
-                ofBackground(76, 153, 0);
-            }
         }
     }
 
@@ -368,14 +356,25 @@ void ofApp::draw(){
 
     if (show_stats)
     {
-        warper.begin();
         ofPushStyle();
+        warper.begin();
         ofSetColor(128, 128, 128, 128);
         ofSetLineWidth(1.0);
         ofFill();
         ofRect(bounding_box);
-        ofPopStyle();
         warper.end();
+
+        if (in_error)
+        {
+            ofSetColor(200, 0, 0);
+        }
+        else
+        {
+            ofSetColor(0, 200, 0);
+        }
+        ofRect(10, 14, 20, 4);
+
+        ofPopStyle();
 
         std::vector<std::string> messages;
         std::string client_id = parameters.getString("client_id");
@@ -391,7 +390,7 @@ void ofApp::draw(){
             messages.push_back("Frame discontinuities: " + frame_number_errors);
         }
 
-        float y_offset = 20;
+        float y_offset = 40;
         for (std::vector<std::string>::const_iterator it = messages.begin(); it != messages.end(); ++it)
         {
             ofDrawBitmapString(*it, 10, y_offset);
