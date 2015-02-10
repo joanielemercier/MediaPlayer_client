@@ -50,4 +50,6 @@ private:
         bool dimensions_changed;
         ofRectangle bounding_box;
         ofRectangle crop_box;
+
+        std::vector<ofMesh> blends;
 };

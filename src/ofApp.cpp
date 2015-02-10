@@ -82,6 +82,14 @@ void ofApp::setup(){
     parameters.add(warp_bottom_right_param);
     ofParameter<ofPoint> warp_bottom_left_param("warp_bottom_left", ofPoint(0.0, 0.0));
     parameters.add(warp_bottom_left_param);
+    ofParameter<float> blend_top_param("blend_top", 0.0);
+    parameters.add(blend_top_param);
+    ofParameter<float> blend_right_param("blend_right", 0.0);
+    parameters.add(blend_right_param);
+    ofParameter<float> blend_bottom_param("blend_bottom", 0.0);
+    parameters.add(blend_bottom_param);
+    ofParameter<float> blend_left_param("blend_left", 0.0);
+    parameters.add(blend_left_param);
 
 	ofXml xml("settings.xml");
 
@@ -238,6 +246,71 @@ void ofApp::update(){
         warper.setCorner(ofxGLWarper::TOP_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
         warper.setCorner(ofxGLWarper::BOTTOM_LEFT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
         warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
+
+        /*
+        Update blend meshes
+        */
+        blends.clear();
+        if (parameters.getFloat("blend_top") > 0.0)
+        {
+            ofPoint adjustment(0.0, parameters.getFloat("blend_top"));
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.position);
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopRight());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getTopRight() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            blends.push_back(mesh);
+        }
+        if (parameters.getFloat("blend_right") > 0.0)
+        {
+            ofPoint adjustment(parameters.getFloat("blend_right"), 0.0);
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.getTopRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getTopRight());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomRight());
+            mesh.addColor(ofColor::black);
+            blends.push_back(mesh);
+        }
+        if (parameters.getFloat("blend_bottom") > 0.0)
+        {
+            ofPoint adjustment(0.0, parameters.getFloat("blend_bottom"));
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.getBottomLeft() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomLeft());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomRight());
+            mesh.addColor(ofColor::black);
+            blends.push_back(mesh);
+        }
+        if (parameters.getFloat("blend_left") > 0.0)
+        {
+            ofPoint adjustment(parameters.getFloat("blend_left"), 0.0);
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.position);
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomLeft());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            blends.push_back(mesh);
+        }
         dimensions_changed = false;
     }
     player.update();
@@ -334,6 +407,22 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     {
         updatePointParameter("warp_bottom_left", 1, getMessageFloat(message, 0));
     }
+    else if (local_address == "/blend/top" && message.getNumArgs() == 1)
+    {
+        parameters["blend_top"].cast<float>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/blend/right" && message.getNumArgs() == 1)
+    {
+        parameters["blend_right"].cast<float>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/blend/bottom" && message.getNumArgs() == 1)
+    {
+        parameters["blend_bottom"].cast<float>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/blend/left" && message.getNumArgs() == 1)
+    {
+        parameters["blend_left"].cast<float>() = getMessageFloat(message, 0);
+    }
     else
     {
         ofLog() << "Unexpected message address: " << message.getAddress();
@@ -352,6 +441,10 @@ void ofApp::draw(){
     {
         ofTexture* texture = player.getTexture();
         texture->drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
+    }
+    for (std::vector<ofMesh>::iterator it = blends.begin(); it != blends.end(); ++it)
+    {
+        it->draw();
     }
     warper.end();
 

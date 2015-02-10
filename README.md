@@ -34,3 +34,7 @@ Coordinates have their origin bottom-left.
 | /warp/bottom_right/y | Vertical transform applied to bottom right corner   |
 | /warp/bottom_left/x  | Horizontal transform applied to bottom left corner  |
 | /warp/bottom_left/y  | Vertical transform applied to bottom left corner    |
+| /blend/left          | Blend distance in pixels from left edge             |
+| /blend/top           | Blend distance in pixels from top edge              |
+| /blend/right         | Blend distance in pixels from right edge            |
+| /blend/bottom        | Blend distance in pixels from bottom edge           |
