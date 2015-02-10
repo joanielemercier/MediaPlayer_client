@@ -51,6 +51,7 @@ void ofApp::setup(){
 	current_frame_number = 0;
     parameters_changed = false;
     dimensions_changed = true;
+    source_changed = true;
 	ofBackground(0);
 	font.loadFont(OF_TTF_MONO, 72);
 
@@ -108,26 +109,6 @@ void ofApp::setup(){
     ofAddListener(parameters.parameterChangedE, this, &ofApp::parameterChanged);
 
     /*
-    Load our source
-    */
-
-    std::string source_path = parameters.getString("source");
-
-    if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
-    {
-        sequence.load(source_path);
-        use_sequence = true;
-    }
-    else
-    {
-        player.loadMovie(source_path);
-        player.setLoopState(OF_LOOP_NORMAL);
-        player.setSpeed(0.0);
-        player.play();
-        use_sequence = false;
-    }
-
-    /*
     Restore full-screen state
     */
     ofSetFullscreen(parameters.getBool("full_screen"));
@@ -182,6 +163,31 @@ void ofApp::update(){
             }
             previous = *it;
         }
+    }
+
+    if (source_changed)
+    {
+        /*
+        Load our source
+        */
+
+        std::string source_path = parameters.getString("source");
+
+        if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
+        {
+            sequence.load(source_path);
+            use_sequence = true;
+        }
+        else
+        {
+            player.loadMovie(source_path);
+            player.setLoopState(OF_LOOP_NORMAL);
+            player.setSpeed(0.0);
+            player.play();
+            use_sequence = false;
+        }
+
+        source_changed = false;
     }
 
     if (frame_was_updated)
@@ -435,6 +441,11 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
         bool full_screen = getMessageInteger(message, 0);
         parameters["full_screen"].cast<bool>() = full_screen;
         ofSetFullscreen(full_screen);
+    }
+    else if (local_address == "/source" && message.getNumArgs() == 1)
+    {
+        parameters["source"].cast<string>() = message.getArgAsString(0);
+        source_changed = true;
     }
     else
     {

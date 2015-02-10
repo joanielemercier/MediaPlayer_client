@@ -18,6 +18,7 @@ Coordinates have their origin bottom-left.
 
 | address              | arguments                                           |
 |----------------------|-----------------------------------------------------|
+| /source              | Source full or relative path                        |
 | /frame_number        | Frame number                                        |
 | /frame_number_reset  | A discontinuous frame number (optional, default 0)  |
 | /display_stats       | 0 display off, any other value on                   |

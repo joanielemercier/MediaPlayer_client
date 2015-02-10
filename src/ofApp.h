@@ -36,6 +36,7 @@ private:
 
 		ofParameterGroup parameters;
 		bool parameters_changed;
+        bool source_changed;
 
 		ofxHapPlayer player;
         ofxHapImageSequence sequence;
