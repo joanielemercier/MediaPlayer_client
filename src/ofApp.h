@@ -50,4 +50,5 @@ private:
         ofPoint image_dimensions;
         bool dimensions_changed;
         ofRectangle bounding_box;
+        ofRectangle crop_box;
 };

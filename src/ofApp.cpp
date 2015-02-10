@@ -65,6 +65,8 @@ void ofApp::setup(){
     parameters.add(source_param);
     ofParameter<std::string> client_id_param("client_id", random_string);
     parameters.add(client_id_param);
+    ofParameter<bool> crop_active_param("crop_active", false);
+    parameters.add(crop_active_param);
     ofParameter<ofPoint> crop_origin_param("crop_origin", ofPoint(0.0, 0.0));
     parameters.add(crop_origin_param);
     ofParameter<float> crop_width_param("crop_width", 0);
@@ -190,6 +192,7 @@ void ofApp::update(){
                 image = sequence[actual_frame];
                 if (image.getWidth() != image_dimensions.x || image.getHeight() != image_dimensions.y)
                 {
+                    image_dimensions.set(image.getWidth(), image.getHeight());
                     dimensions_changed = true;
                 }
             }
@@ -198,6 +201,7 @@ void ofApp::update(){
                 player.setFrame(actual_frame);
                 if (player.getWidth() != image_dimensions.x || player.getHeight() != image_dimensions.y)
                 {
+                    image_dimensions.set(player.getWidth(), player.getHeight());
                     dimensions_changed = true;
                 }
             }
@@ -221,17 +225,30 @@ void ofApp::update(){
         /*
         Update the warper
         */
-        image_dimensions.x = (use_sequence ? image.getWidth() : player.getWidth());
-        image_dimensions.y = (use_sequence ? image.getHeight() : player.getHeight());
-
-        bounding_box.set(0.0, 0.0, image_dimensions.x, image_dimensions.y);
+        if (parameters.getBool("crop_active"))
+        {
+            crop_box.position = parameters.getPoint("crop_origin");
+            crop_box.width = parameters.getFloat("crop_width");
+            crop_box.height = parameters.getFloat("crop_height");
+            // Flip for OF's coords
+            crop_box.y = image_dimensions.y - crop_box.y - crop_box.height;
+            crop_box = crop_box.getIntersection(ofRectangle(0, 0, image_dimensions.x, image_dimensions.y));
+        }
+        else
+        {
+            crop_box.position = ofPoint(0);
+            crop_box.width = image_dimensions.x;
+            crop_box.height = image_dimensions.y;
+        }
+        bounding_box = crop_box;
         bounding_box.scaleTo(ofGetWindowRect());
 
         warper.setup(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
-        warper.setCorner(ofxGLWarper::TOP_LEFT, parameters.getPoint("warp_top_left").get() + warper.getCorner(ofxGLWarper::TOP_LEFT));
-        warper.setCorner(ofxGLWarper::TOP_RIGHT, parameters.getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
-        warper.setCorner(ofxGLWarper::BOTTOM_LEFT, parameters.getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
-        warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, parameters.getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
+        // Multiply by 1,-1 to invert for OF's coords
+        warper.setCorner(ofxGLWarper::TOP_LEFT, ofPoint(1, -1) * parameters.getPoint("warp_top_left").get() + warper.getCorner(ofxGLWarper::TOP_LEFT));
+        warper.setCorner(ofxGLWarper::TOP_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
+        warper.setCorner(ofxGLWarper::BOTTOM_LEFT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
+        warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
         dimensions_changed = false;
     }
     player.update();
@@ -276,6 +293,10 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     {
         show_stats = getMessageInteger(message, 0);
     }
+    else if (local_address == "/crop/active" && message.getNumArgs() == 1)
+    {
+        parameters["crop_active"].cast<bool>() = getMessageInteger(message, 0);
+    }
     else if (local_address == "/crop/x" && message.getNumArgs() == 1)
     {
         updatePointParameter("crop_origin", 0, getMessageFloat(message, 0));
@@ -286,11 +307,11 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/crop/width" && message.getNumArgs() == 1)
     {
-        parameters["crop_width"].cast<int>() = getMessageFloat(message, 0);
+        parameters["crop_width"].cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/crop/height" && message.getNumArgs() == 1)
     {
-        parameters["crop_height"].cast<int>() = getMessageFloat(message, 0);
+        parameters["crop_height"].cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/warp/top_left/x" && message.getNumArgs() == 1)
     {
@@ -298,7 +319,7 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/warp/top_left/y" && message.getNumArgs() == 1)
     {
-        updatePointParameter("warp_top_left", 1, -getMessageFloat(message, 0));
+        updatePointParameter("warp_top_left", 1, getMessageFloat(message, 0));
     }
     else if (local_address == "/warp/top_right/x" && message.getNumArgs() == 1)
     {
@@ -306,7 +327,7 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/warp/top_right/y" && message.getNumArgs() == 1)
     {
-        updatePointParameter("warp_top_right", 1, -getMessageFloat(message, 0));
+        updatePointParameter("warp_top_right", 1, getMessageFloat(message, 0));
     }
     else if (local_address == "/warp/bottom_right/x" && message.getNumArgs() == 1)
     {
@@ -314,7 +335,7 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/warp/bottom_right/y" && message.getNumArgs() == 1)
     {
-        updatePointParameter("warp_bottom_right", 1, -getMessageFloat(message, 0));
+        updatePointParameter("warp_bottom_right", 1, getMessageFloat(message, 0));
     }
     else if (local_address == "/warp/bottom_left/x" && message.getNumArgs() == 1)
     {
@@ -322,7 +343,7 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/warp/bottom_left/y" && message.getNumArgs() == 1)
     {
-        updatePointParameter("warp_bottom_left", 1, -getMessageFloat(message, 0));
+        updatePointParameter("warp_bottom_left", 1, getMessageFloat(message, 0));
     }
     else
     {
@@ -332,15 +353,16 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
     warper.begin();
     if (use_sequence)
-    {        
-        image.draw(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
+    {
+        ofTexture& texture = image.getTextureReference();
+        texture.drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
     }
     else if (player.isLoaded())
     {
-        player.draw(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
+        ofTexture* texture = player.getTexture();
+        texture->drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
     }
     warper.end();
 
