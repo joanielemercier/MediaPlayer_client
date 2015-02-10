@@ -48,4 +48,5 @@ Temporary Items
 obj/
 /bin/*
 !/bin/data
+/bin/data/settings.xml
 *.mov
