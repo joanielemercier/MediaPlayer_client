@@ -38,3 +38,4 @@ Coordinates have their origin bottom-left.
 | /blend/top           | Blend distance in pixels from top edge              |
 | /blend/right         | Blend distance in pixels from right edge            |
 | /blend/bottom        | Blend distance in pixels from bottom edge           |
+| /full_screen         | 0 for windowed, any other value full-screen         |

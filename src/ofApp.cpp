@@ -90,6 +90,8 @@ void ofApp::setup(){
     parameters.add(blend_bottom_param);
     ofParameter<float> blend_left_param("blend_left", 0.0);
     parameters.add(blend_left_param);
+    ofParameter<bool> fullscreen_param("full_screen", false);
+    parameters.add(fullscreen_param);
 
 	ofXml xml("settings.xml");
 
@@ -124,6 +126,11 @@ void ofApp::setup(){
         player.play();
         use_sequence = false;
     }
+
+    /*
+    Restore full-screen state
+    */
+    ofSetFullscreen(parameters.getBool("full_screen"));
 }
 
 //--------------------------------------------------------------
@@ -422,6 +429,12 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     else if (local_address == "/blend/left" && message.getNumArgs() == 1)
     {
         parameters["blend_left"].cast<float>() = getMessageFloat(message, 0);
+    }
+    else if (local_address == "/full_screen" && message.getNumArgs() == 1)
+    {
+        bool full_screen = getMessageInteger(message, 0);
+        parameters["full_screen"].cast<bool>() = full_screen;
+        ofSetFullscreen(full_screen);
     }
     else
     {
