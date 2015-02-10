@@ -48,7 +48,6 @@ void ofApp::setup(){
 	ofSetFrameRate(60);
 	receiver.setup(6666);
 	in_error = true;
-    show_stats = true;
 	current_frame_number = 0;
     parameters_changed = false;
     dimensions_changed = true;
@@ -63,6 +62,8 @@ void ofApp::setup(){
 	parameters.setName("settings");
     ofParameter<std::string> source_param("source", "Movie.mov");
     parameters.add(source_param);
+    ofParameter<bool> show_stats_param("show_stats", true);
+    parameters.add(show_stats_param);
     ofParameter<std::string> client_id_param("client_id", random_string);
     parameters.add(client_id_param);
     ofParameter<bool> crop_active_param("crop_active", false);
@@ -279,7 +280,7 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/display_stats" && message.getNumArgs() == 1)
     {
-        show_stats = getMessageInteger(message, 0);
+        parameters["show_stats"].cast<bool>() = getMessageInteger(message, 0);
     }
     else if (local_address == "/crop/active" && message.getNumArgs() == 1)
     {
@@ -354,7 +355,7 @@ void ofApp::draw(){
     }
     warper.end();
 
-    if (show_stats)
+    if (parameters.getBool("show_stats"))
     {
         ofPushStyle();
         warper.begin();
