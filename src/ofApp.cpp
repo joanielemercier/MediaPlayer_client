@@ -651,7 +651,7 @@ name(n), dimensions_changed(true), bounding_box(ofRectangle()), crop_box(ofRecta
 
 ofApp::Output::~Output()
 {
-
+    ofRemoveListener(parameters->parameterChangedE, this, &ofApp::Output::parameterChanged);
 }
 
 ofApp::Output& ofApp::Output::operator = (const ofApp::Output& b)
