@@ -49,7 +49,7 @@ Coordinates have their origin bottom-left.
 
 ## The send_config Command
 
-On receiving a `send_config` command, a client will return via OSC to the provided address and port XML formatted:
+On receiving a `send_config` command, a client will return via OSC with address `/client/xml` to the provided host and port XML formatted:
 
     <config>
     	<id>90a1</id>
