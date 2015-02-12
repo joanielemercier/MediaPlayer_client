@@ -272,15 +272,9 @@ void ofApp::update(){
         xml.serialize(client_parameters);
 
         xml.setTo("//settings");
-        if (!xml.exists("outputs"))
-        {
-            xml.addChild("outputs");
-        }
+        xml.addChild("outputs");
 
         xml.setTo("outputs");
-        int numChild = xml.getNumChildren();
-        xml.removeContents();
-        numChild = xml.getNumChildren();
 
         for (std::map<std::string, Output>::const_iterator it = outputs.begin(); it != outputs.end(); ++it) {
             ofXml output_xml;
