@@ -353,7 +353,7 @@ void ofApp::doClientOSCEvent(const std::string& local_address, const ofxOscMessa
         client_parameters["source"].cast<string>() = message.getArgAsString(0);
         source_changed = true;
     }
-    else if (local_address == "add_output")
+    else if (local_address == "/add_output")
     {
         std::string name;
         if (message.getNumArgs() == 1)
@@ -370,7 +370,7 @@ void ofApp::doClientOSCEvent(const std::string& local_address, const ofxOscMessa
             outputs_were_reconfigured = true;
         }
     }
-    else if (local_address == "delete_output" && message.getNumArgs() == 1)
+    else if (local_address == "/delete_output" && message.getNumArgs() == 1)
     {
         std::string name = message.getArgAsString(0);
         if (outputs.count(name) == 1)
