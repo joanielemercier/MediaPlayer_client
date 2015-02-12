@@ -24,19 +24,50 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
 private:
-        void doOSCEvent(std::string local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked);
+        class Output {
+            friend class ofApp;
+        public:
+            Output(std::string name);
+            ~Output();
+            Output& operator = (const Output& b);
+            Output(const Output& p);
+            void update(float image_width, float image_height);
+            void draw(ofTexture& texture, bool show_stats);
+            void doOSCEvent(const std::string& local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked);
+        private:
+            void updatePointParameter(std::string name, int index, float value);
+            void parameterChanged(ofAbstractParameter & parameter);
+            std::string name;
+
+            bool dimensions_changed;
+            bool parameters_changed;
+            ofRectangle bounding_box;
+            ofRectangle crop_box;
+
+            std::vector<ofMesh> blends;
+            ofxGLWarper warper;
+
+            std::shared_ptr<ofParameterGroup> parameters;
+        };
+        void doClientOSCEvent(const std::string& local_address,
+                              const ofxOscMessage& message,
+                              bool& frame_was_updated,
+                              bool& missed_frames_need_checked,
+                              bool& outputs_were_reconfigured);
         void parameterChanged(ofAbstractParameter & parameter);
-        void updatePointParameter(std::string name, int index, float value);
+
 		ofxOscReceiver receiver;
 		std::list<int> frame_numbers;
+
+        bool source_changed;
 		bool in_error;
 		int current_frame_number;
+        std::map<std::string, Output> outputs;
 
 		ofTrueTypeFont font;
 
-		ofParameterGroup parameters;
-		bool parameters_changed;
-        bool source_changed;
+		ofParameterGroup client_parameters;
+		bool client_parameters_changed;
 
 		ofxHapPlayer player;
         ofxHapImageSequence sequence;
@@ -45,12 +76,6 @@ private:
         bool use_sequence;
         std::string frame_number_errors;
 
-        ofxGLWarper warper;
-
         ofPoint image_dimensions;
-        bool dimensions_changed;
-        ofRectangle bounding_box;
-        ofRectangle crop_box;
 
-        std::vector<ofMesh> blends;
 };

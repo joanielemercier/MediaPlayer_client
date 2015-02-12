@@ -11,32 +11,38 @@ To address a particular client using multicast, prefix the address with "/client
 
     /client/8fb1/frame_number
 
+To address a particular output of a client using multicast, prefix the address with the prefix for the client, followed by /output/ and the unique identifier, eg
+
+    /client/8fb1/output/surface3/warp/top_left/x
+
 Numeric arguments can be represented in any form.
 
 Coordinates have their origin bottom-left.
 
+| address              | arguments                                           | scope                    |
+|----------------------|-----------------------------------------------------|--------------------------|
+| /add_output          | Name for the output (optional, default random)      | universe, client         |
+| /delete_output       | Name of the output                                  | universe, client         |
+| /full_screen         | 0 for windowed, any other value full-screen         | universe, client         |
+| /display_stats       | 0 display off, any other value on                   | universe, client         |
+| /source              | Source full or relative path                        | universe, client         |
+| /frame_number        | Frame number                                        | universe, client         |
+| /frame_number_reset  | A discontinuous frame number (optional, default 0)  | universe, client         |
+| /crop/active         | 0 crop inactive, any other value active             | universe, client, output |
+| /crop/x              | Horizontal crop origin in frame pixels              | universe, client, output |
+| /crop/y              | Vertical crop origin in frame pixels                | universe, client, output |
+| /crop/width          | Crop width in frame pixels                          | universe, client, output |
+| /crop/height         | Crop height in frame pixels                         | universe, client, output |
+| /warp/top_left/x     | Horizontal transform applied to top left corner     | universe, client, output |
+| /warp/top_left/y     | Vertical transform applied to top left corner       | universe, client, output |
+| /warp/top_right/x    | Horizontal transform applied to top right corner    | universe, client, output |
+| /warp/top_right/y    | Vertical transform applied to top right corner      | universe, client, output |
+| /warp/bottom_right/x | Horizontal transform applied to bottom right corner | universe, client, output |
+| /warp/bottom_right/y | Vertical transform applied to bottom right corner   | universe, client, output |
+| /warp/bottom_left/x  | Horizontal transform applied to bottom left corner  | universe, client, output |
+| /warp/bottom_left/y  | Vertical transform applied to bottom left corner    | universe, client, output |
+| /blend/left          | Blend distance in pixels from left edge             | universe, client, output |
+| /blend/top           | Blend distance in pixels from top edge              | universe, client, output |
+| /blend/right         | Blend distance in pixels from right edge            | universe, client, output |
+| /blend/bottom        | Blend distance in pixels from bottom edge           | universe, client, output |
 
-| address              | arguments                                           |
-|----------------------|-----------------------------------------------------|
-| /source              | Source full or relative path                        |
-| /frame_number        | Frame number                                        |
-| /frame_number_reset  | A discontinuous frame number (optional, default 0)  |
-| /display_stats       | 0 display off, any other value on                   |
-| /crop/active         | 0 crop inactive, any other value active             |
-| /crop/x              | Horizontal crop origin in frame pixels              |
-| /crop/y              | Vertical crop origin in frame pixels                |
-| /crop/width          | Crop width in frame pixels                          |
-| /crop/height         | Crop height in frame pixels                         |
-| /warp/top_left/x     | Horizontal transform applied to top left corner     |
-| /warp/top_left/y     | Vertical transform applied to top left corner       |
-| /warp/top_right/x    | Horizontal transform applied to top right corner    |
-| /warp/top_right/y    | Vertical transform applied to top right corner      |
-| /warp/bottom_right/x | Horizontal transform applied to bottom right corner |
-| /warp/bottom_right/y | Vertical transform applied to bottom right corner   |
-| /warp/bottom_left/x  | Horizontal transform applied to bottom left corner  |
-| /warp/bottom_left/y  | Vertical transform applied to bottom left corner    |
-| /blend/left          | Blend distance in pixels from left edge             |
-| /blend/top           | Blend distance in pixels from top edge              |
-| /blend/right         | Blend distance in pixels from right edge            |
-| /blend/bottom        | Blend distance in pixels from bottom edge           |
-| /full_screen         | 0 for windowed, any other value full-screen         |

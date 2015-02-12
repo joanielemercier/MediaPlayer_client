@@ -49,8 +49,7 @@ void ofApp::setup(){
 	receiver.setup(6666);
 	in_error = true;
 	current_frame_number = 0;
-    parameters_changed = false;
-    dimensions_changed = true;
+    client_parameters_changed = false;
     source_changed = true;
 	ofBackground(0);
 	font.loadFont(OF_TTF_MONO, 72);
@@ -60,64 +59,72 @@ void ofApp::setup(){
     */
     std::string random_string = ofToHex(uint16_t(ofRandom(UINT16_MAX)));
 
-	parameters.setName("settings");
+	client_parameters.setName("settings");
     ofParameter<std::string> source_param("source", "Movie.mov");
-    parameters.add(source_param);
+    client_parameters.add(source_param);
     ofParameter<bool> show_stats_param("show_stats", true);
-    parameters.add(show_stats_param);
+    client_parameters.add(show_stats_param);
     ofParameter<std::string> client_id_param("client_id", random_string);
-    parameters.add(client_id_param);
-    ofParameter<bool> crop_active_param("crop_active", false);
-    parameters.add(crop_active_param);
-    ofParameter<ofPoint> crop_origin_param("crop_origin", ofPoint(0.0, 0.0));
-    parameters.add(crop_origin_param);
-    ofParameter<float> crop_width_param("crop_width", 0);
-    parameters.add(crop_width_param);
-    ofParameter<float> crop_height_param("crop_height", 0);
-    parameters.add(crop_height_param);
-    ofParameter<ofPoint> warp_top_left_param("warp_top_left", ofPoint(0.0, 0.0));
-    parameters.add(warp_top_left_param);
-    ofParameter<ofPoint> warp_top_right_param("warp_top_right", ofPoint(0.0, 0.0));
-    parameters.add(warp_top_right_param);
-    ofParameter<ofPoint> warp_bottom_right_param("warp_bottom_right", ofPoint(0.0, 0.0));
-    parameters.add(warp_bottom_right_param);
-    ofParameter<ofPoint> warp_bottom_left_param("warp_bottom_left", ofPoint(0.0, 0.0));
-    parameters.add(warp_bottom_left_param);
-    ofParameter<float> blend_top_param("blend_top", 0.0);
-    parameters.add(blend_top_param);
-    ofParameter<float> blend_right_param("blend_right", 0.0);
-    parameters.add(blend_right_param);
-    ofParameter<float> blend_bottom_param("blend_bottom", 0.0);
-    parameters.add(blend_bottom_param);
-    ofParameter<float> blend_left_param("blend_left", 0.0);
-    parameters.add(blend_left_param);
+    client_parameters.add(client_id_param);
     ofParameter<bool> fullscreen_param("full_screen", false);
-    parameters.add(fullscreen_param);
-
+    client_parameters.add(fullscreen_param);
+    ofParameter<bool> first_run_param("first_run", true);
+    client_parameters.add(first_run_param);
+    
 	ofXml xml("settings.xml");
 
-	xml.deserialize(parameters);
+	xml.deserialize(client_parameters);
+
+    /*
+     Create outputs to match our settings
+     */
+    if (xml.exists("settings/outputs"))
+    {
+        xml.setTo("settings/outputs");
+        int count = xml.getNumChildren();
+        for (int i = 0; i < count; i++)
+        {
+            xml.setToChild(i);
+            std::string output_name = xml.getAttribute("id");
+            if (xml.getNumChildren() == 1)
+            {
+                outputs.insert(std::pair<std::string, Output>(output_name, Output(output_name)));
+                xml.deserialize(*outputs.find(output_name)->second.parameters);
+            }
+            xml.setToParent();
+        }
+    }
+    else if (client_parameters.getBool("first_run"))
+    {
+        /*
+         If this is the first run and no outputs were in settings.xml, create a default output
+         */
+        outputs.insert(std::pair<std::string, Output>("1", Output("1")));
+        outputs.find("1")->second.parameters_changed = true;
+        client_parameters["first_run"].cast<bool>() = false;
+    }
 
     /*
     Save settings now so that client_id is saved if we generated it
     */
-	parameters_changed = true;
+	client_parameters_changed = true;
 
     /*
     Monitor any subsequent settings changes so we can save them
     */
-    ofAddListener(parameters.parameterChangedE, this, &ofApp::parameterChanged);
+    ofAddListener(client_parameters.parameterChangedE, this, &ofApp::parameterChanged);
 
     /*
     Restore full-screen state
     */
-    ofSetFullscreen(parameters.getBool("full_screen"));
+    ofSetFullscreen(client_parameters.getBool("full_screen"));
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	bool frame_was_updated = false;
     bool missed_frames_need_checked = false;
+    bool outputs_were_reconfigured = false;
 
     while (receiver.hasWaitingMessages())
     {
@@ -126,18 +133,40 @@ void ofApp::update(){
 
         std::string address = stripWhiteSpace(message.getAddress());
 
-        std::string client_prefix = "/client/";
-        if (address.compare(0, client_prefix.length(), client_prefix) == 0)
+        std::vector<std::string> parts = ofSplitString(address, "/");
+        if (parts.size() > 1)
         {
-            client_prefix += parameters.getString("client_id");
-            if (address.compare(0, client_prefix.length(), client_prefix) == 0)
+            if (parts[1] == "client")
             {
-                doOSCEvent(address.substr(client_prefix.length(), std::string::npos), message, frame_was_updated, missed_frames_need_checked);
+                std::string client_id = client_parameters.getString("client_id");
+                if (parts.size() > 2 && parts[2] == client_id)
+                {
+                    if (parts.size() > 3 && parts[3] == "output")
+                    {
+                        std::string output = parts[4];
+                        parts.erase(parts.begin(), parts.begin() + 5);
+                        address = "/" + ofJoinString(parts, "/");
+                        if (outputs.count(output) > 0)
+                        {
+                            outputs.find(output)->second.doOSCEvent(address, message, frame_was_updated, missed_frames_need_checked);
+                        }
+                        else
+                        {
+                            ofLogWarning() << "Ignoring OSC message for unknown output \"" << output << "\"";
+                        }
+                    }
+                    else
+                    {
+                        parts.erase(parts.begin(), parts.begin() + 3);
+                        address = "/" + ofJoinString(parts, "/");
+                        doClientOSCEvent(address, message, frame_was_updated, missed_frames_need_checked, outputs_were_reconfigured);
+                    }
+                }
             }
-        }
-        else
-        {
-            doOSCEvent(address, message, frame_was_updated, missed_frames_need_checked);
+            else
+            {
+                doClientOSCEvent(address, message, frame_was_updated, missed_frames_need_checked, outputs_were_reconfigured);
+            }
         }
     }
 
@@ -171,7 +200,7 @@ void ofApp::update(){
         Load our source
         */
 
-        std::string source_path = parameters.getString("source");
+        std::string source_path = client_parameters.getString("source");
 
         if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
         {
@@ -196,6 +225,7 @@ void ofApp::update(){
         int total_frames = use_sequence ? sequence.size() : player.getTotalNumFrames();
         if (total_frames > 0)
         {
+            bool dimensions_changed = false;
             long actual_frame = current_frame_number % total_frames;
             if (use_sequence)
             {
@@ -215,121 +245,65 @@ void ofApp::update(){
                     dimensions_changed = true;
                 }
             }
+            if (dimensions_changed)
+            {
+                for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+                    it->second.dimensions_changed = true;
+                }
+            }
         }
     }
 
-    if (parameters_changed)
+    for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+        if (it->second.parameters_changed)
+        {
+            it->second.parameters_changed = false;
+            outputs_were_reconfigured = true;
+        }
+    }
+
+    if (client_parameters_changed || outputs_were_reconfigured)
     {
         /*
         Save the changed parameters
+         Don't load the existing ones here because https://github.com/openframeworks/openFrameworks/issues/3643
         */
-        ofXml xml("settings.xml");
-        xml.serialize(parameters);
+        ofXml xml;
+        xml.serialize(client_parameters);
+
+        xml.setTo("//settings");
+        if (!xml.exists("outputs"))
+        {
+            xml.addChild("outputs");
+        }
+
+        xml.setTo("outputs");
+        int numChild = xml.getNumChildren();
+        xml.removeContents();
+        numChild = xml.getNumChildren();
+
+        for (std::map<std::string, Output>::const_iterator it = outputs.begin(); it != outputs.end(); ++it) {
+            ofXml output_xml;
+            output_xml.addChild("output");
+            output_xml.setTo("output");
+            output_xml.setAttribute("id", it->first);
+            output_xml.serialize(*it->second.parameters);
+            xml.addXml(output_xml);
+        }
+        xml.setToParent();
+        xml.setToParent();
+
         xml.save("settings.xml");
 
-        dimensions_changed = true;
-        parameters_changed = false;
+        client_parameters_changed = false;
     }
-    if (dimensions_changed)
-    {
-        /*
-        Update the warper
-        */
-        if (parameters.getBool("crop_active"))
-        {
-            crop_box.position = parameters.getPoint("crop_origin");
-            crop_box.width = parameters.getFloat("crop_width");
-            crop_box.height = parameters.getFloat("crop_height");
-            // Flip for OF's coords
-            crop_box.y = image_dimensions.y - crop_box.y - crop_box.height;
-            crop_box = crop_box.getIntersection(ofRectangle(0, 0, image_dimensions.x, image_dimensions.y));
-        }
-        else
-        {
-            crop_box.position = ofPoint(0);
-            crop_box.width = image_dimensions.x;
-            crop_box.height = image_dimensions.y;
-        }
-        bounding_box = crop_box;
-        bounding_box.scaleTo(ofGetWindowRect());
-
-        warper.setup(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
-        // Multiply by 1,-1 to invert for OF's coords
-        warper.setCorner(ofxGLWarper::TOP_LEFT, ofPoint(1, -1) * parameters.getPoint("warp_top_left").get() + warper.getCorner(ofxGLWarper::TOP_LEFT));
-        warper.setCorner(ofxGLWarper::TOP_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
-        warper.setCorner(ofxGLWarper::BOTTOM_LEFT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
-        warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, ofPoint(1, -1) * parameters.getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
-
-        /*
-        Update blend meshes
-        */
-        blends.clear();
-        if (parameters.getFloat("blend_top") > 0.0)
-        {
-            ofPoint adjustment(0.0, parameters.getFloat("blend_top"));
-            ofMesh mesh;
-            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-            mesh.addVertex(bounding_box.position);
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getTopRight());
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getTopRight() + adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            blends.push_back(mesh);
-        }
-        if (parameters.getFloat("blend_right") > 0.0)
-        {
-            ofPoint adjustment(parameters.getFloat("blend_right"), 0.0);
-            ofMesh mesh;
-            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-            mesh.addVertex(bounding_box.getTopRight() - adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getTopRight());
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getBottomRight());
-            mesh.addColor(ofColor::black);
-            blends.push_back(mesh);
-        }
-        if (parameters.getFloat("blend_bottom") > 0.0)
-        {
-            ofPoint adjustment(0.0, parameters.getFloat("blend_bottom"));
-            ofMesh mesh;
-            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-            mesh.addVertex(bounding_box.getBottomLeft() - adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getBottomLeft());
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getBottomRight());
-            mesh.addColor(ofColor::black);
-            blends.push_back(mesh);
-        }
-        if (parameters.getFloat("blend_left") > 0.0)
-        {
-            ofPoint adjustment(parameters.getFloat("blend_left"), 0.0);
-            ofMesh mesh;
-            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-            mesh.addVertex(bounding_box.position);
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            mesh.addVertex(bounding_box.getBottomLeft());
-            mesh.addColor(ofColor::black);
-            mesh.addVertex(bounding_box.getBottomLeft() + adjustment);
-            mesh.addColor(ofColor(0.0, 0.0));
-            blends.push_back(mesh);
-        }
-        dimensions_changed = false;
+    for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+        it->second.update(image_dimensions.x, image_dimensions.y);
     }
     player.update();
 }
 
-void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked)
+void ofApp::doClientOSCEvent(const std::string& local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked, bool& outputs_were_reconfigured)
 {
     if (local_address == "/frame_number_reset")
     {
@@ -366,11 +340,61 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/display_stats" && message.getNumArgs() == 1)
     {
-        parameters["show_stats"].cast<bool>() = getMessageInteger(message, 0);
+        client_parameters["show_stats"].cast<bool>() = getMessageInteger(message, 0);
     }
-    else if (local_address == "/crop/active" && message.getNumArgs() == 1)
+    else if (local_address == "/full_screen" && message.getNumArgs() == 1)
     {
-        parameters["crop_active"].cast<bool>() = getMessageInteger(message, 0);
+        bool full_screen = getMessageInteger(message, 0);
+        client_parameters["full_screen"].cast<bool>() = full_screen;
+        ofSetFullscreen(full_screen);
+    }
+    else if (local_address == "/source" && message.getNumArgs() == 1)
+    {
+        client_parameters["source"].cast<string>() = message.getArgAsString(0);
+        source_changed = true;
+    }
+    else if (local_address == "add_output")
+    {
+        std::string name;
+        if (message.getNumArgs() == 1)
+        {
+            name = message.getArgAsString(0);
+        }
+        else
+        {
+            name = ofToString(outputs.size() + 1);
+        }
+        if (outputs.count(name) == 0)
+        {
+            outputs.insert(std::pair<std::string, Output>(name, Output(name)));
+            outputs_were_reconfigured = true;
+        }
+    }
+    else if (local_address == "delete_output" && message.getNumArgs() == 1)
+    {
+        std::string name = message.getArgAsString(0);
+        if (outputs.count(name) == 1)
+        {
+            outputs.erase(name);
+            outputs_were_reconfigured = true;
+        }
+    }
+    else
+    {
+        /*
+         For any other address, forward it to every output
+         */
+        for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+            it->second.doOSCEvent(local_address, message, frame_was_updated, missed_frames_need_checked);
+        }
+    }
+}
+
+void ofApp::Output::doOSCEvent(const std::string &local_address, const ofxOscMessage& message, bool &frame_was_updated, bool &missed_frames_need_checked)
+{
+    if (local_address == "/crop/active" && message.getNumArgs() == 1)
+    {
+        parameters->get("crop_active").cast<bool>() = getMessageInteger(message, 0);
     }
     else if (local_address == "/crop/x" && message.getNumArgs() == 1)
     {
@@ -382,11 +406,11 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/crop/width" && message.getNumArgs() == 1)
     {
-        parameters["crop_width"].cast<float>() = getMessageFloat(message, 0);
+        parameters->get("crop_width").cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/crop/height" && message.getNumArgs() == 1)
     {
-        parameters["crop_height"].cast<float>() = getMessageFloat(message, 0);
+        parameters->get("crop_height").cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/warp/top_left/x" && message.getNumArgs() == 1)
     {
@@ -422,66 +446,45 @@ void ofApp::doOSCEvent(std::string local_address, const ofxOscMessage& message, 
     }
     else if (local_address == "/blend/top" && message.getNumArgs() == 1)
     {
-        parameters["blend_top"].cast<float>() = getMessageFloat(message, 0);
+        parameters->get("blend_top").cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/blend/right" && message.getNumArgs() == 1)
     {
-        parameters["blend_right"].cast<float>() = getMessageFloat(message, 0);
+        parameters->get("blend_right").cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/blend/bottom" && message.getNumArgs() == 1)
     {
-        parameters["blend_bottom"].cast<float>() = getMessageFloat(message, 0);
+        parameters->get("blend_bottom").cast<float>() = getMessageFloat(message, 0);
     }
     else if (local_address == "/blend/left" && message.getNumArgs() == 1)
     {
-        parameters["blend_left"].cast<float>() = getMessageFloat(message, 0);
-    }
-    else if (local_address == "/full_screen" && message.getNumArgs() == 1)
-    {
-        bool full_screen = getMessageInteger(message, 0);
-        parameters["full_screen"].cast<bool>() = full_screen;
-        ofSetFullscreen(full_screen);
-    }
-    else if (local_address == "/source" && message.getNumArgs() == 1)
-    {
-        parameters["source"].cast<string>() = message.getArgAsString(0);
-        source_changed = true;
-    }
-    else
-    {
-        ofLog() << "Unexpected message address: " << message.getAddress();
+        parameters->get("blend_left").cast<float>() = getMessageFloat(message, 0);
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    warper.begin();
+    bool show_stats = client_parameters.getBool("show_stats");
+    ofTexture *texture = NULL;
     if (use_sequence)
     {
-        ofTexture& texture = image.getTextureReference();
-        texture.drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
+        texture = &image.getTextureReference();
     }
     else if (player.isLoaded())
     {
-        ofTexture* texture = player.getTexture();
-        texture->drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
+        texture = player.getTexture();
     }
-    for (std::vector<ofMesh>::iterator it = blends.begin(); it != blends.end(); ++it)
-    {
-        it->draw();
-    }
-    warper.end();
 
-    if (parameters.getBool("show_stats"))
+    if (texture != NULL)
+    {
+        for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+            it->second.draw(*texture, show_stats);
+        }
+    }
+
+    if (show_stats)
     {
         ofPushStyle();
-        warper.begin();
-        ofSetColor(128, 128, 128, 128);
-        ofSetLineWidth(1.0);
-        ofFill();
-        ofRect(bounding_box);
-        warper.end();
-
         if (in_error)
         {
             ofSetColor(200, 0, 0);
@@ -495,12 +498,12 @@ void ofApp::draw(){
         ofPopStyle();
 
         std::vector<std::string> messages;
-        std::string client_id = parameters.getString("client_id");
+        std::string client_id = client_parameters.getString("client_id");
         messages.push_back("Client ID: " + client_id + " " + ofToString(ofGetFrameRate(), 0) + " FPS");
 
         if (use_sequence == false && !player.isLoaded())
         {
-            std::string source_path = parameters.getString("source");
+            std::string source_path = client_parameters.getString("source");
             messages.push_back("Frame source not loaded: " + source_path);
         }
         if (in_error)
@@ -553,7 +556,9 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-    dimensions_changed = true;
+    for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+        it->second.dimensions_changed = true;
+    }
 }
 
 //--------------------------------------------------------------
@@ -568,12 +573,218 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 void ofApp::parameterChanged(ofAbstractParameter & parameter)
 {
-    parameters_changed = true;
+    client_parameters_changed = true;
 }
 
-void ofApp::updatePointParameter(std::string name, int index, float value)
+ofApp::Output::Output(std::string n) :
+name(n), dimensions_changed(true), bounding_box(ofRectangle()), crop_box(ofRectangle()), parameters(new ofParameterGroup()), parameters_changed(false)
 {
-    ofPoint current = parameters[name].cast<ofPoint>();
+    parameters->setName("output_settings");
+    ofParameter<std::string> name_param("name", name);
+    parameters->add(name_param);
+    ofParameter<bool> crop_active_param("crop_active", false);
+    parameters->add(crop_active_param);
+    ofParameter<ofPoint> crop_origin_param("crop_origin", ofPoint(0.0, 0.0));
+    parameters->add(crop_origin_param);
+    ofParameter<float> crop_width_param("crop_width", 0);
+    parameters->add(crop_width_param);
+    ofParameter<float> crop_height_param("crop_height", 0);
+    parameters->add(crop_height_param);
+    ofParameter<ofPoint> warp_top_left_param("warp_top_left", ofPoint(0.0, 0.0));
+    parameters->add(warp_top_left_param);
+    ofParameter<ofPoint> warp_top_right_param("warp_top_right", ofPoint(0.0, 0.0));
+    parameters->add(warp_top_right_param);
+    ofParameter<ofPoint> warp_bottom_right_param("warp_bottom_right", ofPoint(0.0, 0.0));
+    parameters->add(warp_bottom_right_param);
+    ofParameter<ofPoint> warp_bottom_left_param("warp_bottom_left", ofPoint(0.0, 0.0));
+    parameters->add(warp_bottom_left_param);
+    ofParameter<float> blend_top_param("blend_top", 0.0);
+    parameters->add(blend_top_param);
+    ofParameter<float> blend_right_param("blend_right", 0.0);
+    parameters->add(blend_right_param);
+    ofParameter<float> blend_bottom_param("blend_bottom", 0.0);
+    parameters->add(blend_bottom_param);
+    ofParameter<float> blend_left_param("blend_left", 0.0);
+    parameters->add(blend_left_param);
+
+    /*
+     Monitor any subsequent settings changes so we can save them
+     */
+    ofAddListener(parameters->parameterChangedE, this, &ofApp::Output::parameterChanged);
+}
+
+ofApp::Output::~Output()
+{
+
+}
+
+ofApp::Output& ofApp::Output::operator = (const ofApp::Output& b)
+{
+    ofRemoveListener(parameters->parameterChangedE, this, &ofApp::Output::parameterChanged);
+    parameters = b.parameters;
+    name = b.name;
+
+    dimensions_changed = b.dimensions_changed;
+    parameters_changed = b.parameters_changed;
+    bounding_box = b.bounding_box;
+    crop_box = b.crop_box;
+
+    blends = b.blends;
+    warper = b.warper;
+
+    ofAddListener(parameters->parameterChangedE, this, &ofApp::Output::parameterChanged);
+    return *this;
+}
+
+ofApp::Output::Output(const ofApp::Output& p)
+: parameters(p.parameters),
+name(p.name),
+dimensions_changed(p.dimensions_changed),
+parameters_changed(p.parameters_changed),
+bounding_box(p.bounding_box),
+crop_box(p.crop_box),
+blends(p.blends),
+warper(p.warper)
+{
+    ofAddListener(parameters->parameterChangedE, this, &ofApp::Output::parameterChanged);
+}
+
+void ofApp::Output::parameterChanged(ofAbstractParameter &parameter)
+{
+    parameters_changed = true;
+    dimensions_changed = true;
+}
+
+void ofApp::Output::updatePointParameter(std::string name, int index, float value)
+{
+    ofPoint current = parameters->get(name).cast<ofPoint>();
     current[index] = value;
-    parameters[name].cast<ofPoint>() = current;
+    parameters->get(name).cast<ofPoint>() = current;
+}
+
+void ofApp::Output::update(float image_width, float image_height)
+{
+    if (dimensions_changed)
+    {
+        /*
+         Update the warper
+         */
+        if (parameters->getBool("crop_active"))
+        {
+            crop_box.position = parameters->getPoint("crop_origin");
+            crop_box.width = parameters->getFloat("crop_width");
+            crop_box.height = parameters->getFloat("crop_height");
+            // Flip for OF's coords
+            crop_box.y = image_height - crop_box.y - crop_box.height;
+            crop_box = crop_box.getIntersection(ofRectangle(0, 0, image_width, image_height));
+        }
+        else
+        {
+            crop_box.position = ofPoint(0);
+            crop_box.width = image_width;
+            crop_box.height = image_height;
+        }
+        bounding_box = crop_box;
+        bounding_box.scaleTo(ofGetWindowRect());
+
+        warper.setup(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height);
+        // Multiply by 1,-1 to invert for OF's coords
+        warper.setCorner(ofxGLWarper::TOP_LEFT, ofPoint(1, -1) * parameters->getPoint("warp_top_left").get() + warper.getCorner(ofxGLWarper::TOP_LEFT));
+        warper.setCorner(ofxGLWarper::TOP_RIGHT, ofPoint(1, -1) * parameters->getPoint("warp_top_right").get() + warper.getCorner(ofxGLWarper::TOP_RIGHT));
+        warper.setCorner(ofxGLWarper::BOTTOM_LEFT, ofPoint(1, -1) * parameters->getPoint("warp_bottom_left").get() + warper.getCorner(ofxGLWarper::BOTTOM_LEFT));
+        warper.setCorner(ofxGLWarper::BOTTOM_RIGHT, ofPoint(1, -1) * parameters->getPoint("warp_bottom_right").get() + warper.getCorner(ofxGLWarper::BOTTOM_RIGHT));
+
+        /*
+         Update blend meshes
+         */
+        blends.clear();
+        if (parameters->getFloat("blend_top") > 0.0)
+        {
+            ofPoint adjustment(0.0, parameters->getFloat("blend_top"));
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.position);
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopRight());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getTopRight() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            blends.push_back(mesh);
+        }
+        if (parameters->getFloat("blend_right") > 0.0)
+        {
+            ofPoint adjustment(parameters->getFloat("blend_right"), 0.0);
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.getTopRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getTopRight());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomRight());
+            mesh.addColor(ofColor::black);
+            blends.push_back(mesh);
+        }
+        if (parameters->getFloat("blend_bottom") > 0.0)
+        {
+            ofPoint adjustment(0.0, parameters->getFloat("blend_bottom"));
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.getBottomLeft() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomRight() - adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomLeft());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomRight());
+            mesh.addColor(ofColor::black);
+            blends.push_back(mesh);
+        }
+        if (parameters->getFloat("blend_left") > 0.0)
+        {
+            ofPoint adjustment(parameters->getFloat("blend_left"), 0.0);
+            ofMesh mesh;
+            mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+            mesh.addVertex(bounding_box.position);
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getTopLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            mesh.addVertex(bounding_box.getBottomLeft());
+            mesh.addColor(ofColor::black);
+            mesh.addVertex(bounding_box.getBottomLeft() + adjustment);
+            mesh.addColor(ofColor(0.0, 0.0));
+            blends.push_back(mesh);
+        }
+        dimensions_changed = false;
+    }
+}
+
+void ofApp::Output::draw(ofTexture &texture, bool show_stats)
+{
+    warper.begin();
+
+    texture.drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
+
+    for (std::vector<ofMesh>::iterator it = blends.begin(); it != blends.end(); ++it)
+    {
+        it->draw();
+    }
+
+    if (show_stats)
+    {
+        ofPushStyle();
+        ofSetColor(128, 128, 128, 128);
+        ofSetLineWidth(1.0);
+        ofFill();
+        ofRect(bounding_box);
+        ofPopStyle();
+
+        ofPoint draw_point = bounding_box.getCenter() - ofPoint(30, 200);
+        ofDrawBitmapString("Output: " + name, draw_point);
+    }
+
+    warper.end();
 }
