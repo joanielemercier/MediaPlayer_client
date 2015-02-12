@@ -379,6 +379,48 @@ void ofApp::doClientOSCEvent(const std::string& local_address, const ofxOscMessa
             outputs_were_reconfigured = true;
         }
     }
+    else if (local_address == "/send_config" && message.getNumArgs() == 1)
+    {
+        std::string destination = message.getArgAsString(0);
+        std::vector<std::string> parts = ofSplitString(destination, ":");
+        if (parts.size() == 2)
+        {
+            ofxOscSender sender;
+            sender.setup(parts[0], ofToInt(parts[1]));
+            ofxOscMessage message;
+            message.setAddress("/client/xml");
+            ofXml xml;
+            xml.addChild("config");
+            xml.setToChild(0);
+            xml.addChild("id");
+            xml.setValue("id", client_parameters["client_id"].toString());
+            xml.addChild("extent");
+            xml.setTo("extent");
+            xml.addChild("width");
+            xml.addChild("height");
+            xml.setValue("width", ofToString(ofGetWidth()));
+            xml.setValue("height", ofToString(ofGetHeight()));
+            xml.setToParent();
+            xml.addChild("source");
+            xml.setValue("source", client_parameters["source"].toString());
+            xml.addChild("outputs");
+            xml.setTo("outputs");
+            for (std::map<std::string, Output>::const_iterator it = outputs.begin(); it != outputs.end(); ++it) {
+                ofXml output_xml;
+                output_xml.addChild("output");
+                output_xml.setTo("output");
+                output_xml.setAttribute("id", it->first);
+                output_xml.addChild("name");
+                output_xml.setValue("name", it->first);
+                xml.addXml(output_xml);
+            }
+            xml.setToParent();
+            xml.setToParent();
+            message.addStringArg(xml.toString());
+            sender.sendMessage(message);
+        }
+
+    }
     else
     {
         /*

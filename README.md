@@ -28,6 +28,7 @@ Coordinates have their origin bottom-left.
 | /source              | Source full or relative path                        | universe, client         |
 | /frame_number        | Frame number                                        | universe, client         |
 | /frame_number_reset  | A discontinuous frame number (optional, default 0)  | universe, client         |
+| /send_config         | Server address and port (eg 192.168.0.10:2000)      | universe, client         |
 | /crop/active         | 0 crop inactive, any other value active             | universe, client, output |
 | /crop/x              | Horizontal crop origin in frame pixels              | universe, client, output |
 | /crop/y              | Vertical crop origin in frame pixels                | universe, client, output |
@@ -45,4 +46,25 @@ Coordinates have their origin bottom-left.
 | /blend/top           | Blend distance in pixels from top edge              | universe, client, output |
 | /blend/right         | Blend distance in pixels from right edge            | universe, client, output |
 | /blend/bottom        | Blend distance in pixels from bottom edge           | universe, client, output |
+
+## The send_config Command
+
+On receiving a `send_config` command, a client will return via OSC to the provided address and port XML formatted:
+
+    <config>
+    	<id>90a1</id>
+    	<extent>
+    		<width>3840</width>
+    		<height>1020</height>
+    	</extent>
+    	<source>Movie.mov</source>
+    	<outputs>
+    		<output id="1">
+    			<name>1</name>
+    		</output>
+            <output id="2">
+                <name>2</name>
+            </output>
+    	</outputs>
+    </config> 
 
