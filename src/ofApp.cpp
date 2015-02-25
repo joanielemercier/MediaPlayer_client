@@ -229,7 +229,7 @@ void ofApp::update(){
             long actual_frame = current_frame_number % total_frames;
             if (use_sequence)
             {
-                image = sequence[actual_frame];
+                image.loadImage(sequence[actual_frame]);
                 if (image.getWidth() != image_dimensions.x || image.getHeight() != image_dimensions.y)
                 {
                     image_dimensions.set(image.getWidth(), image.getHeight());
