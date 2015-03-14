@@ -502,19 +502,25 @@ void ofApp::Output::doOSCEvent(const std::string &local_address, const ofxOscMes
 void ofApp::draw(){
     bool show_stats = client_parameters.getBool("show_stats");
     ofTexture *texture = NULL;
+    ofShader *shader = NULL;
     if (use_sequence)
     {
+        if (image.getImageType() == ofxHapImage::IMAGE_TYPE_HAP_Q)
+        {
+            shader = &image.getShaderReference();
+        }
         texture = &image.getTextureReference();
     }
     else if (player.isLoaded())
     {
+        shader = player.getShader();
         texture = player.getTexture();
     }
 
     if (texture != NULL)
     {
         for (std::map<std::string, Output>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
-            it->second.draw(*texture, show_stats);
+            it->second.draw(*texture, shader, show_stats);
         }
     }
 
@@ -798,12 +804,19 @@ void ofApp::Output::update(float image_width, float image_height)
     }
 }
 
-void ofApp::Output::draw(ofTexture &texture, bool show_stats)
+void ofApp::Output::draw(ofTexture &texture, ofShader *shader, bool show_stats)
 {
     warper.begin();
 
+    if (shader)
+    {
+        shader->begin();
+    }
     texture.drawSubsection(bounding_box.x, bounding_box.y, bounding_box.width, bounding_box.height, crop_box.x, crop_box.y, crop_box.width, crop_box.height);
-
+    if (shader)
+    {
+        shader->end();
+    }
     for (std::vector<ofMesh>::iterator it = blends.begin(); it != blends.end(); ++it)
     {
         it->draw();

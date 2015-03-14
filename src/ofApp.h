@@ -32,7 +32,7 @@ private:
             Output& operator = (const Output& b);
             Output(const Output& p);
             void update(float image_width, float image_height);
-            void draw(ofTexture& texture, bool show_stats);
+            void draw(ofTexture& texture, ofShader *shader, bool show_stats);
             void doOSCEvent(const std::string& local_address, const ofxOscMessage& message, bool& frame_was_updated, bool& missed_frames_need_checked);
         private:
             void updatePointParameter(std::string name, int index, float value);
