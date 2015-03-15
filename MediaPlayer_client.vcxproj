@@ -92,6 +92,7 @@
 	<ItemGroup>
 		<ClCompile Include="src\main.cpp" />
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="src\Playlist.cpp" />
 		<ClCompile Include="..\..\..\addons\ofxOpenCv\src\ofxCvColorImage.cpp" />
 		<ClCompile Include="..\..\..\addons\ofxOpenCv\src\ofxCvContourFinder.cpp" />
 		<ClCompile Include="..\..\..\addons\ofxOpenCv\src\ofxCvFloatImage.cpp" />
@@ -129,6 +130,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="src\ofApp.h" />
+		<ClInclude Include="src\Playlist.h" />
 		<ClInclude Include="..\..\..\addons\ofxOpenCv\src\ofxCvBlob.h" />
 		<ClInclude Include="..\..\..\addons\ofxOpenCv\src\ofxCvColorImage.h" />
 		<ClInclude Include="..\..\..\addons\ofxOpenCv\src\ofxCvConstants.h" />
