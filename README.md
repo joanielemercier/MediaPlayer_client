@@ -68,3 +68,14 @@ On receiving a `send_config` command, a client will return via OSC with address 
     	</outputs>
     </config> 
 
+## XML Playlist Sources
+
+An example XML source:
+
+    <playlist>
+        <sequence digits="3" suffix=".hpz" start="1" count="40">folder/image_name_prefix</sequence>
+        <sequence digits="3" suffix=".hpz" start="400" count="2000">folder2/image_name_prefix</sequence>
+        <file>folder/file_name_000.hpz</file>
+        <file>folder/file_name_001.hpz</file>
+    </playlist>
+

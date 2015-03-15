@@ -5,6 +5,7 @@
 #include <ofxHapPlayer.h>
 #include <ofxHapImageSequence.h>
 #include <ofxGLWarper.h>
+#include "Playlist.h"
 
 class ofApp : public ofBaseApp{
 
@@ -72,8 +73,14 @@ private:
 		ofxHapPlayer player;
         ofxHapImageSequence sequence;
         ofxHapImage image;
-
-        bool use_sequence;
+        Playlist playlist;
+    
+        enum SourceType {
+            SourceSequence,
+            SourceMovie,
+            SourcePlaylist
+        };
+        SourceType source_type;
         std::string frame_number_errors;
 
         ofPoint image_dimensions;

@@ -201,11 +201,16 @@ void ofApp::update(){
         */
 
         std::string source_path = client_parameters.getString("source");
-
-        if (ofFile(source_path).isDirectory() || ofFilePath::getFileExt(source_path) == ofxHapImage::HapImageFileExtension())
+        std::string source_extension = ofFilePath::getFileExt(source_path);
+        if (ofFile(source_path).isDirectory() || source_extension == ofxHapImage::HapImageFileExtension())
         {
             sequence.load(source_path);
-            use_sequence = true;
+            source_type = SourceSequence;
+        }
+        else if (source_extension == "xml")
+        {
+            playlist.load(source_path);
+            source_type = SourcePlaylist;
         }
         else
         {
@@ -213,7 +218,7 @@ void ofApp::update(){
             player.setLoopState(OF_LOOP_NORMAL);
             player.setSpeed(0.0);
             player.play();
-            use_sequence = false;
+            source_type = SourceMovie;
         }
 
         source_changed = false;
@@ -222,12 +227,25 @@ void ofApp::update(){
     if (frame_was_updated)
     {
         // For now, if frame number is out of range, loop around
-        int total_frames = use_sequence ? sequence.size() : player.getTotalNumFrames();
+        int total_frames = 0;
+        switch (source_type) {
+            case SourceMovie:
+                total_frames = player.getTotalNumFrames();
+                break;
+            case SourceSequence:
+                total_frames = sequence.size();
+                break;
+            case SourcePlaylist:
+                total_frames = playlist.size();
+                break;
+            default:
+                break;
+        }
         if (total_frames > 0)
         {
             bool dimensions_changed = false;
             long actual_frame = current_frame_number % total_frames;
-            if (use_sequence)
+            if (source_type == SourceSequence)
             {
                 image.loadImage(sequence[actual_frame]);
                 if (image.getWidth() != image_dimensions.x || image.getHeight() != image_dimensions.y)
@@ -236,12 +254,21 @@ void ofApp::update(){
                     dimensions_changed = true;
                 }
             }
-            else
+            else if (source_type == SourceMovie)
             {
                 player.setFrame(actual_frame);
                 if (player.getWidth() != image_dimensions.x || player.getHeight() != image_dimensions.y)
                 {
                     image_dimensions.set(player.getWidth(), player.getHeight());
+                    dimensions_changed = true;
+                }
+            }
+            else if (source_type == SourcePlaylist)
+            {
+                image.loadImage(playlist[actual_frame]);
+                if (image.getWidth() != image_dimensions.x || image.getHeight() != image_dimensions.y)
+                {
+                    image_dimensions.set(image.getWidth(), image.getHeight());
                     dimensions_changed = true;
                 }
             }
@@ -503,7 +530,7 @@ void ofApp::draw(){
     bool show_stats = client_parameters.getBool("show_stats");
     ofTexture *texture = NULL;
     ofShader *shader = NULL;
-    if (use_sequence)
+    if (source_type == SourceSequence || source_type == SourcePlaylist)
     {
         if (image.getImageType() == ofxHapImage::IMAGE_TYPE_HAP_Q)
         {
@@ -543,7 +570,7 @@ void ofApp::draw(){
         std::string client_id = client_parameters.getString("client_id");
         messages.push_back("Client ID: " + client_id + " " + ofToString(ofGetFrameRate(), 0) + " FPS");
 
-        if (use_sequence == false && !player.isLoaded())
+        if (source_type == SourceMovie && !player.isLoaded())
         {
             std::string source_path = client_parameters.getString("source");
             messages.push_back("Frame source not loaded: " + source_path);
