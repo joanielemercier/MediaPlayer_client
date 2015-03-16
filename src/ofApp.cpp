@@ -45,7 +45,7 @@ static std::string stripWhiteSpace(const std::string& string)
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetFrameRate(60);
+	ofSetVerticalSync(true);
 	receiver.setup(6666);
 	in_error = true;
 	current_frame_number = 0;
